@@ -25,13 +25,27 @@ var track_layout = {
   highlight: "red",
   name: "mytrack",
   inner_radius: 200,
-  outer_radius: 220
+  outer_radius: 220,
+  mouseclick: mouse_callback
 }
 
-var track_coords = [[0,30000, "island0"],[60000,100000, "island1"],[800000,1000000, "island2"],[2000000,2100000, "island3"]];
+var track_layout2 = {
+  fill: "blue",
+  highlight: "red",
+  name: "mytrack2",
+  inner_radius: 100,
+  outer_radius: 120
+}
+
+var track_coords = [
+		    {start:0, end:30000, name:"island0", fill:"yellow", highlight:"green"},
+		    {start:60000,end:100000, name:"island1"},
+		    {start:800000,end:1000000, name:"island2"},
+		    {start:2000000,end:2100000, name:"island3"}
+		    ]
 
 function mouse_callback(d, i) {
-//  console.log(d, i);   
+  console.log(d, i);   
 }
 
 var plot_layout = {
@@ -60,4 +74,11 @@ IslandPlot.createCanvas("#chart", mycfg);
 IslandPlot.drawAxis();
 IslandPlot.drawPlot(plot_layout, gc_values);
 IslandPlot.drawPlot(plot_layout2, gc_values2);
-IslandPlot.drawTrack(track_layout, track_coords, mouse_callback);
+IslandPlot.drawTrack(track_layout, track_coords, true);
+IslandPlot.drawTrack(track_layout2, track_coords, true);
+
+function removelayer () {
+    console.log("Remove track");
+    IslandPlot.moveTrack("mytrack",10,20,1);
+    return false;
+}

@@ -2,20 +2,21 @@ var IslandPlot = {
     cfg: {
        radius: 5,
        w: 600,
-	   h: 600,
-	   factor: 1,
-	   factorLegend: .85,
-	   levels: 3,
-	   maxValue: 0,
-	   radians: 2 * Math.PI,
-	   opacityArea: 0.5,
-	   ToRight: 5,
-	   TranslateX: 80,
-	   TranslateY: 30,
-	   ExtraWidthX: 100,
-	   ExtraWidthY: 100,
+       h: 600,
+       factor: 1,
+       factorLegend: .85,
+       levels: 3,
+       maxValue: 0,
+       radians: 2 * Math.PI,
+       opacityArea: 0.5,
+       ToRight: 5,
+       TranslateX: 80,
+       TranslateY: 30,
+       ExtraWidthX: 100,
+       ExtraWidthY: 100,
        spacing: 100000,
-       legend_spacing: 5
+       legend_spacing: 5,
+       layout: "polar"
     },
 
     createCanvas: function(id, options) {
@@ -30,6 +31,7 @@ var IslandPlot = {
         
       IslandPlot.cfg.radians_pre_bp = cfg.radians/cfg.genomesize;
       IslandPlot.cfg.radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
+      IslandPlot.cfg.tracks = [];
       d3.select(id).select("svg").remove();
 	
 	  IslandPlot.g = d3.select(id)
@@ -135,46 +137,136 @@ var IslandPlot = {
       outer_radius: 120
     },
     
-    drawTrack: function(track_layout, track_coords, callback) {
+    // Pass in a track_layout which may contain
+    // the following:
+    // track_layout: {
+    //    fill: "colour",
+    //    highlight: "colour",
+    //    name: "namestr"     [REQUIRED]
+    //    inner_radius: num   [REQUIRED]
+    //    outer_radius: num   [REQUIRED]
+    //    mouseover: callback(d, i)
+    //    mouseout: callback(d, i)
+    //    mouseclick: callback(d, i)
+    // }
+
+    // track_coords is an array of objects
+    // track_coord = [
+    //    { 
+    //       start: num,  [REQUIRED] start point in bp
+    //       end: num,    [REQUIRED] end point in bp
+    //       fill: "colour",
+    //       highlight: "colour",
+    //       strand: [1,-1],
+    //       name: "string"
+    // ]
+
+    // And a final argument to animate the addition of the elements
+
+    drawTrack: function(track_layout, track_coords, animate) {
       var cfg = IslandPlot.cfg;
       var g = IslandPlot.g;
 
+      // Fill in any mandatory defaults that weren't provided
       for(var i in IslandPlot.default_track_layout){
 		if('undefined' == typeof track_layout[i]){
 		    track_layout[i] = IslandPlot.default_track_layout[i];
+		    console.log("Updating " + i + "to " + IslandPlot.default_track_layout[i]);
 		  }
       }
+
+      // Save the track_layout for later if we need it
+      IslandPlot.cfg.tracks[track_layout.name] = track_layout;
         
+      // The arc object which will be passed in to each
+      // set of data
       var arc = d3.svg.arc()
-      .innerRadius(track_layout.inner_radius)
-      .outerRadius(track_layout.outer_radius)
-      .startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d[0];})
-      .endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d[1];})
+      .innerRadius((('undefined' == typeof animate) ? track_layout.inner_radius : 1))
+      .outerRadius((('undefined' == typeof animate) ? track_layout.outer_radius : 2))
+      .startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.start;})
+      .endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.end;})
       
       g.selectAll(".tracks."+track_layout.name)
       .data(track_coords)
       .enter()
       .append("path")
       .attr("d", arc)
-      .attr("id", track_layout.name)
-      .style("fill", track_layout.fill)
+      .attr("class", track_layout.name)
+      .style("fill", function(d) { return ('undefined' !== typeof d.fill) ? d.fill : track_layout.fill})
       .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
       .on("mouseover", function(d, i) {
-          if('undefined' !== typeof track_layout.highlight) {
+	  if('undefined' !== typeof d.highlight) {
+	    d3.select(this).style("fill", d.highlight);
+          } else if('undefined' !== typeof track_layout.highlight) {
             d3.select(this).style("fill", track_layout.highlight);
           }
-          if('undefined' !== typeof callback) {
-            callback(d, i)
-          } })
-      .on("mouseout", function(d, i) {
-          if('undefined' !== track_layout.highlight) {
-            d3.select(this).style("fill", track_layout.fill)
-          } });
+          if('undefined' !== typeof track_layout.mouseover) {
+	      track_layout.mouseover(d, i);
+	  } })
+       .on("mouseout", function(d, i) {
+          if('undefined' !== typeof d.fill) {
+            d3.select(this).style("fill", d.fill)
+          } else {
+      	    d3.select(this).style("fill", track_layout.fill)
+      	  }
+      	  if('undefined' !== typeof track_layout.mouseout) {
+      	      track_layout.mouseout(d, i);
+      	  } })
+      .on("click", function(d,i) {
+	      if('undefined' !== typeof track_layout.mouseclick) {
+		  track_layout.mouseclick(d,i);
+	      }
+	  });
+
+      // If we're doing an animated addition, move the track out to its
+      // new spot
+      if('undefined' !== typeof animate) {
+	  IslandPlot.moveTrack(track_layout.name, track_layout.inner_radius, track_layout.outer_radius);
+      }
+
     },
     
     mapRange: function(from, to, s) {
        return to[0] + (s - from[0]) * (to[1] - to[0]) / (from[1] - from[0]);
-    }
+    },
+
+    moveTrack: function(name, innerRadius, outerRadius) {
+	var track_layout = IslandPlot.cfg.tracks[name];
+	console.log(name);
+        var g = IslandPlot.g;
+
+	var arcShrink = d3.svg.arc()
+	.innerRadius(innerRadius)
+	.outerRadius(outerRadius)
+	.endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.start;})
+	.startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.end;});
+
+	g.selectAll("." + name)
+	.transition()
+	.duration(1000)
+       	.attr("d", arcShrink)
+
+    },
+
+    removeTrack: function(name) {
+	var track_layout = IslandPlot.cfg.tracks[name];
+	console.log(name);
+        var g = IslandPlot.g;
+
+	var arcShrink = d3.svg.arc()
+	.innerRadius(innerRadius)
+	.outerRadius(outerRadius)
+	.endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.start;})
+	.startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.end;});
+
+	g.selectAll("." + name)
+	.transition()
+	.duration(1000)
+       	.attr("d", arcShrink)
+	.remove();
+
+    },
+    
     
 };
 
