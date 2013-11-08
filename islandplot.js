@@ -32,6 +32,8 @@ var IslandPlot = {
       IslandPlot.cfg.radians_pre_bp = cfg.radians/cfg.genomesize;
       IslandPlot.cfg.radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
       IslandPlot.cfg.tracks = [];
+      IslandPlot.cfg.plot_values = [];
+      IslandPlot.cfg.plot_layout = [];
       d3.select(id).select("svg").remove();
 	
 	  IslandPlot.g = d3.select(id)
@@ -85,13 +87,16 @@ var IslandPlot = {
 
     },
     
+    // Default values for the plot, some sanity settings
+
     plot_layout: {
       fill: "none",
       stroke: "grey"
     },
     
-//    drawGC: function(gc_min, gc_max, gc_mean, gc_radius, gc_width, bp_per_value, gc_values) {
-    drawPlot: function(plot_layout, plot_values) {
+    // Draw a plot function
+
+    drawPlot: function(plot_layout, plot_values, animate) {
       var cfg = IslandPlot.cfg;
       var g = IslandPlot.g;
 
@@ -102,39 +107,108 @@ var IslandPlot = {
       }    
 
       var from_range = [plot_layout.plot_min, plot_layout.plot_max];
-      var to_range = [plot_layout.plot_radius-(plot_layout.plot_width/2), plot_layout.plot_radius+(gc_width/2)];
+      var to_range = [plot_layout.plot_radius-(plot_layout.plot_width/2), plot_layout.plot_radius+(plot_layout.plot_width/2)];
 
-      for(var i = 0; i < plot_values.length; i++) {  
-        plot_values[i] = IslandPlot.mapRange(from_range, to_range, plot_values[i]);
-      }
+      //      for(var i = 0; i < plot_values.length; i++) {  
+      //      	  plot_values[i] = IslandPlot.mapRange(from_range, to_range, plot_values[i]);
+      //      }
       
       var lineFunction = d3.svg.line()
-        .x(function(d, i) { return cfg.w/2 + (d*Math.cos((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
-        .y(function(d, i) { return cfg.h/2 + (d*Math.sin((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+      .x(function(d, i) { return cfg.w/2 + ((('undefined' == typeof animate) ? IslandPlot.mapRange(from_range, to_range, d) : 1 )*Math.cos((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+      .y(function(d, i) { return cfg.h/2 + ((('undefined' == typeof animate) ? IslandPlot.mapRange(from_range, to_range, d) : 1 )*Math.sin((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+      //        .x(function(d, i) { return cfg.w/2 + (d*Math.cos((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+      //        .y(function(d, i) { return cfg.h/2 + (d*Math.sin((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
         .interpolate("linear");
-        
+
       g.append("path")
         .attr("d", lineFunction(plot_values))
-        .attr("stroke", "blue")
+        .attr("stroke", plot_layout.stroke)
+        .attr("class", plot_layout.name)
         .attr("stroke-width", 1)
         .attr("fill", "none");
       
       // Now do the mean circle if we have one
       if('undefined' !== typeof plot_layout.plot_mean) {
-        g.append("circle")
-          .attr("r", IslandPlot.mapRange(from_range, to_range, plot_layout.plot_mean))
-          .style("fill", plot_layout.fill)
-          .style("stroke", plot_layout.stroke)
-          .attr("cx", cfg.w/2)
-          .attr("cy", cfg.h/2);
+	  IslandPlot.drawCircle(plot_layout.name, IslandPlot.mapRange(from_range, to_range, plot_layout.plot_mean), plot_layout.mean_stroke, animate);
+
+	  //        g.append("circle")
+	  //	    .attr("r", (('undefined' == typeof aninmated) ? IslandPlot.mapRange(from_range, to_range, plot_layout.plot_mean) : 1))
+	  //          .style("fill", "none")
+	  //          .style("stroke", plot_layout.stroke)
+	  //          .attr("cx", cfg.w/2)
+	  //          .attr("cy", cfg.h/2);
       }  
+
+      // Save the plot_data for later if we need it
+      IslandPlot.cfg.plot_values[plot_layout.name] = plot_values;
+      IslandPlot.cfg.plot_layout[plot_layout.name] = plot_layout;
+
+      if('undefined' !== typeof animate) {
+	  IslandPlot.movePlot(plot_layout.name, plot_layout.plot_radius);
+      }
+
     },
+
+    movePlot: function(name, radius) {
+      var cfg = IslandPlot.cfg;
+      var g = IslandPlot.g;
+      var plot_values = IslandPlot.cfg.plot_values[name];
+      var plot_layout = IslandPlot.cfg.plot_layout[name];
+
+      IslandPlot.cfg.plot_layout[name].plot_radius = radius;
+
+      var from_range = [plot_layout.plot_min, plot_layout.plot_max];
+      var to_range = [radius-(plot_layout.plot_width/2), radius+(plot_layout.plot_width/2)]; 
+
+      var lineFunction = d3.svg.line()
+      .x(function(d, i) { return cfg.w/2 + (IslandPlot.mapRange(from_range, to_range, d)*Math.cos((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+        .y(function(d, i) { return cfg.h/2 + (IslandPlot.mapRange(from_range, to_range, d)*Math.sin((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+        .interpolate("linear");
+
+      g.selectAll("." + name)
+      .transition()
+      .duration(1000)
+      .attr("d", lineFunction(plot_values))
+      	
+    },
+
+    removePlot: function(name) {
+      var cfg = IslandPlot.cfg;
+      var g = IslandPlot.g;
+      var plot_values = IslandPlot.cfg.plot_values[name];
+      var plot_layout = IslandPlot.cfg.plot_layout[name];
+
+      var from_range = [plot_layout.plot_min, plot_layout.plot_max];
+      var to_range = [1-(plot_layout.plot_width/2), 1+(plot_layout.plot_width/2)]; 
+
+      var lineFunction = d3.svg.line()
+      .x(function(d, i) { return cfg.w/2 + (IslandPlot.mapRange(from_range, to_range, d)*Math.cos((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+        .y(function(d, i) { return cfg.h/2 + (IslandPlot.mapRange(from_range, to_range, d)*Math.sin((i*plot_layout.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+        .interpolate("linear");
+
+      g.selectAll("." + name)
+      .transition()
+      .duration(1000)
+      .attr("d", lineFunction(plot_values))
+      .style("opacity", 0)
+      .remove();
+
+      if('undefined' !== typeof plot_layout.plot_mean) {
+	  IslandPlot.removeCircle(name);
+      }
+      
+      IslandPlot.cfg.plot_values[name] = undefined;
+
+    },
+
+    // The default layout for a track, some sanity values
 
     default_track_layout: {
       fill: "black",
       name: "mytrack",
       inner_radius: 100,
-      outer_radius: 120
+      outer_radius: 120,
+      centre_line_stroke: "grey"
     },
     
     // Pass in a track_layout which may contain
@@ -171,7 +245,6 @@ var IslandPlot = {
       for(var i in IslandPlot.default_track_layout){
 		if('undefined' == typeof track_layout[i]){
 		    track_layout[i] = IslandPlot.default_track_layout[i];
-		    console.log("Updating " + i + "to " + IslandPlot.default_track_layout[i]);
 		  }
       }
 
@@ -181,8 +254,12 @@ var IslandPlot = {
       // The arc object which will be passed in to each
       // set of data
       var arc = d3.svg.arc()
-      .innerRadius((('undefined' == typeof animate) ? track_layout.inner_radius : 1))
-      .outerRadius((('undefined' == typeof animate) ? track_layout.outer_radius : 2))
+      .innerRadius(function(d){ return (('undefined' == typeof animate) ? 
+					IslandPlot.calcInnerRadius(track_layout.inner_radius, track_layout.outer_radius, d.strand) 
+					: 1);})
+      .outerRadius(function(d){ return (('undefined' == typeof animate) ? 
+					IslandPlot.calcOuterRadius(track_layout.inner_radius, track_layout.outer_radius, d.strand)
+					: 2);})
       .startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.start;})
       .endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.end;})
       
@@ -224,20 +301,86 @@ var IslandPlot = {
 	  IslandPlot.moveTrack(track_layout.name, track_layout.inner_radius, track_layout.outer_radius);
       }
 
+      // And check if we've been asked to do a centre line
+      if('undefined' !== typeof track_layout.centre_line) {
+	  IslandPlot.drawCircle(track_layout.name, (track_layout.inner_radius + track_layout.outer_radius)/2, track_layout.centre_line_stroke, animate);
+      }
+
+    },
+
+    // Helper function for drawing needed circles such
+    // as in stranded tracks
+    drawCircle: function(name, radius, line_stroke, animate) {
+	var g = IslandPlot.g;
+	var cfg = IslandPlot.cfg;
+
+        g.append("circle")
+	.attr("r", (('undefined' == typeof animate) ? radius : 1 ))
+  	  .attr("class", name + "_circle")
+          .style("fill", "none")
+          .style("stroke", line_stroke)
+          .attr("cx", cfg.w/2)
+          .attr("cy", cfg.h/2);
+
+	// An animated entrance
+	if('undefined' !== typeof animate) {
+	    IslandPlot.moveCircle(name, radius);
+	}
+	
+    },
+
+    moveCircle: function(name, radius) {
+	var g = IslandPlot.g;
+
+	g.selectAll("." + name + "_circle")
+	.transition()
+	.duration(1000)
+	.attr("r", radius);
     },
     
+    removeCircle: function(name) {
+	var g = IslandPlot.g;
+
+	g.selectAll("." + name + "_circle")
+	.transition()
+	.duration(1000)
+	.attr("r", 1)
+	.style("opacity", 0)
+	.remove();
+
+    },
+
+    calcInnerRadius: function(inner, outer, strand) {
+	if('undefined' == typeof strand) {
+	    return inner;
+	} else if(strand == -1) {
+	    return inner;
+	} else {
+	    return (inner+outer)/2;
+	}
+    },
+
+    calcOuterRadius: function(inner, outer, strand) {
+	if('undefined' == typeof strand) {
+	    return outer;
+	} else if(strand == -1) {
+	    return (inner+outer)/2;
+	} else {
+	    return outer;
+	}
+    },
+
     mapRange: function(from, to, s) {
        return to[0] + (s - from[0]) * (to[1] - to[0]) / (from[1] - from[0]);
     },
 
     moveTrack: function(name, innerRadius, outerRadius) {
 	var track_layout = IslandPlot.cfg.tracks[name];
-	console.log(name);
         var g = IslandPlot.g;
 
 	var arcShrink = d3.svg.arc()
-	.innerRadius(innerRadius)
-	.outerRadius(outerRadius)
+	.innerRadius(function(d){return IslandPlot.calcInnerRadius(innerRadius, outerRadius, d.strand);})
+	.outerRadius(function(d){return IslandPlot.calcOuterRadius(innerRadius, outerRadius, d.strand);})
 	.endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.start;})
 	.startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.end;});
 
@@ -245,17 +388,20 @@ var IslandPlot = {
 	.transition()
 	.duration(1000)
        	.attr("d", arcShrink)
+
+	// Just record the new radii in case we need them later
+	IslandPlot.cfg.tracks[name].inner_radius = innerRadius;
+	IslandPlot.cfg.tracks[name].outer_radius = outerRadius;
 
     },
 
     removeTrack: function(name) {
 	var track_layout = IslandPlot.cfg.tracks[name];
-	console.log(name);
         var g = IslandPlot.g;
 
 	var arcShrink = d3.svg.arc()
-	.innerRadius(innerRadius)
-	.outerRadius(outerRadius)
+	.innerRadius(1)
+	.outerRadius(2)
 	.endAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.start;})
 	.startAngle(function(d){return IslandPlot.cfg.radians_pre_bp*d.end;});
 
@@ -263,7 +409,12 @@ var IslandPlot = {
 	.transition()
 	.duration(1000)
        	.attr("d", arcShrink)
+	.style("opacity", 0)
 	.remove();
+
+	if('undefined' !== track_layout.centre_line) {
+	    IslandPlot.removeCircle(name);
+	}
 
     },
     

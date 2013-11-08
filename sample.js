@@ -24,24 +24,38 @@ var track_layout = {
   fill: "blue",
   highlight: "red",
   name: "mytrack",
-  inner_radius: 200,
-  outer_radius: 220,
-  mouseclick: mouse_callback
+  inner_radius: 195,
+  outer_radius: 225,
+  mouseclick: mouse_callback,
+  centre_line: true,
+  centre_line_stroke: "black"
+
 }
 
 var track_layout2 = {
   fill: "blue",
   highlight: "red",
   name: "mytrack2",
-  inner_radius: 100,
-  outer_radius: 120
+  inner_radius: 130,
+  outer_radius: 150
 }
 
-var track_coords = [
+var track_coords2 = [
 		    {start:0, end:30000, name:"island0", fill:"yellow", highlight:"green"},
 		    {start:60000,end:100000, name:"island1"},
 		    {start:800000,end:1000000, name:"island2"},
-		    {start:2000000,end:2100000, name:"island3"}
+		    {start:1200000,end:1500000, name:"island3"},
+		    {start:1500000,end:1700000, name:"island4"},
+		    {start:2000000,end:2100000, name:"island5"}
+		    ]
+
+var track_coords = [
+		    {start:0, end:30000, name:"island0", fill:"green", strand: -1},
+		    {start:60000,end:100000, name:"island1", fill:"green", strand: -1},
+		    {start:800000,end:1000000, name:"island2", strand: 1},
+		    {start:1200000,end:1500000, name:"island3", strand: 1},
+		    {start:1500000,end:1700000, name:"island4",fill:"green",strand: -1},
+		    {start:2000000,end:2100000, name:"island5", strand: 1}
 		    ]
 
 function mouse_callback(d, i) {
@@ -55,8 +69,9 @@ var plot_layout = {
     plot_radius: gc_radius,
     plot_width: gc_width,
     bp_per_element: bp_per_value,
-    fill: "none",
-    stroke: "grey"
+    stroke: "blue",
+    mean_stroke: "grey",
+    name: "gcvalues"
 }
 
 var plot_layout2 = {
@@ -65,20 +80,38 @@ var plot_layout2 = {
     plot_radius: 160,
     plot_width: gc_width,
     bp_per_element: bp_per_value,
-    fill: "none",
-    stroke: "grey"
+    stroke: "grey",
+    name: "gcvalues2"
 }
 
 //console.log("Starting");
 IslandPlot.createCanvas("#chart", mycfg);
 IslandPlot.drawAxis();
-IslandPlot.drawPlot(plot_layout, gc_values);
+IslandPlot.drawPlot(plot_layout, gc_values, true);
 IslandPlot.drawPlot(plot_layout2, gc_values2);
 IslandPlot.drawTrack(track_layout, track_coords, true);
-IslandPlot.drawTrack(track_layout2, track_coords, true);
+IslandPlot.drawTrack(track_layout2, track_coords2);
+IslandPlot.drawCircle("outerlayer", 240, "grey");
+
+//IslandPlot.removePlot("gcvalues");
+
+function updateGC(cb) {
+    if(cb.checked) {
+	IslandPlot.drawPlot(plot_layout, gc_values, true);
+    } else {
+	IslandPlot.removePlot("gcvalues");
+    }
+}
+
+function updateStrand(cb) {
+    if(cb.checked) {
+	IslandPlot.drawTrack(track_layout, track_coords, true);
+    } else {
+	IslandPlot.removeTrack("mytrack");
+    }
+}
 
 function removelayer () {
-    console.log("Remove track");
-    IslandPlot.moveTrack("mytrack",10,20,1);
+    IslandPlot.removeTrack("mytrack");
     return false;
 }
