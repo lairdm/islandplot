@@ -94,7 +94,19 @@ var glyph_layout = {
 
 var glyph_data = [
 		  {bp: 100, type: 'vfdb'},
-		  {bp: 50000, type: 'adb'}
+		  {bp: 50000, type: 'adb'},
+		  {bp: 51000, type: 'adb'},
+		  {bp: 52000, type: 'vfdb'},
+		  {bp: 53000, type: 'adb'},
+		  {bp: 54000, type: 'vfdb'},
+		  {bp: 55000, type: 'adb'},
+		  {bp: 56000, type: 'adb'}
+]
+
+var glyph_data2 = [
+		  {bp: 100, type: 'vfdb'},
+		  {bp: 52000, type: 'vfdb'},
+		  {bp: 54000, type: 'vfdb'},
 ]
 
 //console.log("Starting");
@@ -106,9 +118,9 @@ IslandPlot.drawTrack(track_layout, track_coords, true);
 IslandPlot.drawTrack(track_layout2, track_coords2);
 IslandPlot.drawCircle("outerlayer", 240, "grey");
 IslandPlot.drawGlyphTrack(glyph_layout, glyph_data);
-glyph_data[1].bp = 1000000;
-glyph_data[2] = {bp: 2000000, type: 'vfdb' };
-IslandPlot.updateGlyphTrack("myglyphtrack", glyph_data);
+//glyph_data[1].bp = 1000000;
+//glyph_data[2] = {bp: 2000000, type: 'vfdb' };
+//IslandPlot.updateGlyphTrack("myglyphtrack", glyph_data);
 
 //IslandPlot.removePlot("gcvalues");
 
@@ -131,4 +143,12 @@ function updateStrand(cb) {
 function removelayer () {
     IslandPlot.removeTrack("mytrack");
     return false;
+}
+
+function updateAdb(cb) {
+    if(cb.checked) {
+	IslandPlot.updateGlyphTrack("myglyphtrack", glyph_data);
+    } else {
+	IslandPlot.updateGlyphTrack("myglyphtrack", glyph_data2);
+    }
 }

@@ -421,12 +421,14 @@ var IslandPlot = {
  
     default_glyph_track: {
 	name: 'myglyphtrack',
-	pixel_spacing: 8
+	pixel_spacing: 8,
+	glyph_buffer: 8
     },
    
     drawGlyphTrack: function(track_info, track_data) {
 	var cfg = IslandPlot.cfg;
         var g = IslandPlot.g;
+	var stack_count = 0;
 
 	// Fill in any mandatory defaults that weren't provided
 	for(var i in IslandPlot.default_glyph_track){
@@ -439,8 +441,8 @@ var IslandPlot = {
 	IslandPlot.cfg.glyph_tracks[track_info.name] = track_info;
 
 
-	var x = function(d,i,proximity) { console.log(d,i); return cfg.w/2 + (((proximity == true ? track_info.pixel_spacing : 0) + track_info.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
-	var y = function(d,i,proximity) {return cfg.h/2 + (((proximity == true ? track_info.pixel_spacing : 0) + track_info.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+	var x = function(d,i,proximity) { console.log(d,i); return cfg.w/2 + (((proximity == true ? (track_info.glyph_buffer * stack_count) : 0) + track_info.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+	var y = function(d,i,proximity) {return cfg.h/2 + (((proximity == true ? (track_info.glyph_buffer * stack_count) : 0) + track_info.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
 
 	var test_proximity = function(d,i) {
 	    var xs = 0;
@@ -459,8 +461,9 @@ var IslandPlot = {
 	    console.log("dist " + dist);
 	    console.log("spacing " + track_info.pixel_spacing);
 
-	    if(dist < track_info.pixel_spacing) { console.log("true"); return true; }
+	    if(dist < track_info.pixel_spacing) { console.log("true"); stack_count++; return true; }
 
+	    stack_count = 0;
 	    return false;
 	}
 
