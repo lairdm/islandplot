@@ -59,7 +59,7 @@ var track_coords = [
 		    ]
 
 function mouse_callback(d, i) {
-  console.log(d, i);   
+  alert(d, i);   
 }
 
 var plot_layout = {
@@ -84,6 +84,19 @@ var plot_layout2 = {
     name: "gcvalues2"
 }
 
+var glyph_layout = {
+    name: 'myglyphtrack',
+    type: 'triangle',
+    radius: 75,
+    colours: {vfdb: 'green',
+              adb: 'blue'}
+}
+
+var glyph_data = [
+		  {bp: 100, type: 'vfdb'},
+		  {bp: 50000, type: 'adb'}
+]
+
 //console.log("Starting");
 IslandPlot.createCanvas("#chart", mycfg);
 IslandPlot.drawAxis();
@@ -92,6 +105,10 @@ IslandPlot.drawPlot(plot_layout2, gc_values2);
 IslandPlot.drawTrack(track_layout, track_coords, true);
 IslandPlot.drawTrack(track_layout2, track_coords2);
 IslandPlot.drawCircle("outerlayer", 240, "grey");
+IslandPlot.drawGlyphTrack(glyph_layout, glyph_data);
+glyph_data[1].bp = 1000000;
+glyph_data[2] = {bp: 2000000, type: 'vfdb' };
+IslandPlot.updateGlyphTrack("myglyphtrack", glyph_data);
 
 //IslandPlot.removePlot("gcvalues");
 

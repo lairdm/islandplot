@@ -32,6 +32,7 @@ var IslandPlot = {
       IslandPlot.cfg.radians_pre_bp = cfg.radians/cfg.genomesize;
       IslandPlot.cfg.radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
       IslandPlot.cfg.tracks = [];
+      IslandPlot.cfg.glyph_tracks = [];
       IslandPlot.cfg.plot_values = [];
       IslandPlot.cfg.plot_layout = [];
       d3.select(id).select("svg").remove();
@@ -417,7 +418,131 @@ var IslandPlot = {
 	}
 
     },
-    
+ 
+    default_glyph_track: {
+	name: 'myglyphtrack',
+	pixel_spacing: 8
+    },
+   
+    drawGlyphTrack: function(track_info, track_data) {
+	var cfg = IslandPlot.cfg;
+        var g = IslandPlot.g;
+
+	// Fill in any mandatory defaults that weren't provided
+	for(var i in IslandPlot.default_glyph_track){
+	    if('undefined' == typeof track_info[i]){
+		track_info[i] = IslandPlot.default_glyph_track[i];
+	    }
+	}
+
+	// Save the track_layout for later if we need it
+	IslandPlot.cfg.glyph_tracks[track_info.name] = track_info;
+
+
+	var x = function(d,i,proximity) { console.log(d,i); return cfg.w/2 + (((proximity == true ? track_info.pixel_spacing : 0) + track_info.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+	var y = function(d,i,proximity) {return cfg.h/2 + (((proximity == true ? track_info.pixel_spacing : 0) + track_info.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+
+	var test_proximity = function(d,i) {
+	    var xs = 0;
+	    var ys = 0;
+
+	    if(i < 1) { return false; }
+
+	    xs = (cfg.h/2 + (track_info.radius*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2))) -
+	    (cfg.h/2 + (track_info.radius*Math.sin((track_data[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	    ys = (cfg.h/2 + (track_info.radius*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2))) -
+	    (cfg.h/2 + (track_info.radius*Math.cos((track_data[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	    xs = xs * xs;
+	    ys = ys * ys;
+	    var dist = Math.sqrt(xs + ys);
+
+	    console.log("dist " + dist);
+	    console.log("spacing " + track_info.pixel_spacing);
+
+	    if(dist < track_info.pixel_spacing) { console.log("true"); return true; }
+
+	    return false;
+	}
+
+	var track = g.selectAll('.' + track_info.name)
+	.data(track_data)
+	.enter()
+	.append('path')
+	.attr('class', track_info.name)
+	.attr("d", d3.svg.symbol().type(track_info.type))
+	.attr("transform", function(d,i) { var proximity = test_proximity(d,i); 
+					   return "translate(" + x(d,i, proximity) + ","
+					   + y(d,i, proximity) + ")" })
+	.style("fill", function(d) { return glyph_layout.colours[d.type] })
+	
+    },
+
+    updateGlyphTrack: function(name, track_data) {
+	var cfg = IslandPlot.cfg;
+        var g = IslandPlot.g;
+	var track_info = IslandPlot.cfg.glyph_tracks[name];
+
+	var x = function(i,proximity) { console.log("point " +i); return cfg.w/2 + (((proximity == true ? track_info.pixel_spacing : 0) + track_info.radius)*Math.cos((track_data[i].bp*cfg.radians_pre_bp)-Math.PI/2)); };
+	var y = function(i,proximity) {return cfg.h/2 + (((proximity == true ? track_info.pixel_spacing : 0) + track_info.radius)*Math.sin((track_data[i].bp*cfg.radians_pre_bp)-Math.PI/2)); };
+
+	var test_proximity = function(i) {
+	    var xs = 0;
+	    var ys = 0;
+
+	    if(i < 1) { return false; }
+
+	    xs = (cfg.h/2 + (track_info.radius*Math.sin((track_data[i].bp*cfg.radians_pre_bp)-Math.PI/2))) -
+	    (cfg.h/2 + (track_info.radius*Math.sin((track_data[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	    ys = (cfg.h/2 + (track_info.radius*Math.cos((track_data[i].bp*cfg.radians_pre_bp)-Math.PI/2))) -
+	    (cfg.h/2 + (track_info.radius*Math.cos((track_data[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	    xs = xs * xs;
+	    ys = ys * ys;
+	    var dist = Math.sqrt(xs + ys);
+
+	    console.log("dist " + dist);
+	    console.log("spacing " + track_info.pixel_spacing);
+
+	    if(dist < track_info.pixel_spacing) { console.log("true"); return true; }
+
+	    return false;
+	}
+
+	console.log("updating");
+
+	var track = g.selectAll('.' + name)
+	.data(track_data);
+
+
+	track.transition()
+	.duration(1000)
+	.attr("d", d3.svg.symbol().type(track_info.type))
+	.attr("transform", function(d,i) { console.log("trying " + d, i); var proximity = test_proximity(i); 
+					   return "translate(" + x(i, proximity) + ","
+					   + y(i, proximity) + ")" })
+	//	.each(function(d,i) {console.log(d,i)})
+
+	console.log(track);
+
+	track.enter()
+	.append('path')
+	.attr('class', name)
+	.attr("d", d3.svg.symbol().type(track_info.type))
+	.attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
+	.style("fill", function(d) { return glyph_layout.colours[d.type] })
+	.transition()
+	.duration(1000)
+	.attr("transform", function(d,i) { console.log("adding " + d,i); var proximity = test_proximity(i); 
+					   return "translate(" + x(i, proximity) + ","
+					       + y(i, proximity) + ")"; })
+
+	track.exit()
+	.transition()
+	.duration(1000)
+	.attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
+	.style("opacity", 0)
+	.remove()
+
+    }
     
 };
 
