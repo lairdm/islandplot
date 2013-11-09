@@ -86,7 +86,7 @@ var plot_layout2 = {
 
 var glyph_layout = {
     name: 'myglyphtrack',
-    type: 'triangle',
+    type: 'circle',
     radius: 75,
     colours: {vfdb: 'green',
               adb: 'blue'}
