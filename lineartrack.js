@@ -36,4 +36,12 @@ var LinearTrack = {
 	    .attr("transform", "translate(" + cfg.TranslateX + "," + cfg.TranslateY + ")");
 
     },
+
+    drawAxis: function() {
+	var cfg = IslandPlot.cfg;
+	var g = IslandPlot.g;
+
+	
+
+    }
 };
