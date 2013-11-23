@@ -1,0 +1,51 @@
+.chart {
+    shape-rendering: crispEdges;
+}
+
+.mini text {
+    font: 9px sans-serif;	
+}
+
+.main text {
+    font: 12px sans-serif;	
+}
+
+.track1_pos {
+    fill: darksalmon;
+    stroke-width: 6;	
+}
+
+.track1_neg {
+    fill: darkolivegreen;
+    fill-opacity: .7;
+    stroke-width: 6;	
+}
+
+.track2_pos {
+    fill: slategray;
+    fill-opacity: .7;
+    stroke-width: 6;	
+}
+
+.track2_neg {
+    fill: green;
+    fill-opacity: .7;
+    stroke-width: 6;	
+}
+
+.trackAxis .domain {
+    stroke-width: 1;
+}
+
+.brush .background {
+    stroke: black;
+    stroke-width: 2;
+    fill: slategray;
+    fill-opacity: .3;
+}
+
+.brush .extent {
+    stroke: gray;
+    fill: dodgerblue;
+    fill-opacity: .365;
+}

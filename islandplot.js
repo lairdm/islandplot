@@ -548,7 +548,27 @@ var IslandPlot = {
 	.style("opacity", 0)
 	.remove()
 
-    }
+    },
     
+    attachBrush: function() {
+	var cfg = IslandPlot.cfg;
+	var g = IslandPlot.g;
+
+	g.on('mousemove', function() {
+		var x = d3.mouse(this)[0] - (cfg.w/2);
+		var y = -(d3.mouse(this)[1] - (cfg.h/2));
+		rad = Math.PI/2 - Math.atan(y/x);// - Math.PI/2;
+		if(x < 0) {
+		    // II & III quadrant
+		    rad = rad + Math.PI;
+		}
+		//		} else if(x < 0 && y < 0) {
+		//		    rad = rad + Math.PI;
+		//		}
+		console.log(x, y, rad);
+		    //		console.log(d3.mouse(this)[0], d3.mouse(this)[1]);
+	    });
+    }
+
 };
 

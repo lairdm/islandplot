@@ -124,6 +124,8 @@ IslandPlot.drawGlyphTrack(glyph_layout, glyph_data);
 
 //IslandPlot.removePlot("gcvalues");
 
+IslandPlot.attachBrush();
+
 function updateGC(cb) {
     if(cb.checked) {
 	IslandPlot.drawPlot(plot_layout, gc_values, true);
