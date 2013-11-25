@@ -15,26 +15,42 @@
  #linearchart {
    position: absolute;
      top: 50px;
-       left: 100px;
+       left: 600px;
        }
  #brush {
     position: absolute;
     top: 500px;
-    left: 150px;
+    left: 750px;
 }
+
+ #chart {
+   position: absolute;
+     top: 100px;
+       left: 0px;
+       }
        </style>
     <link rel="stylesheet" type="text/css" href="tracks.css">
   </head>
   <body>
     <div id="body">
+      <div id="chart"></div>
       <div id="linearchart"></div>      
       <div id="brush"></div>
     </div>
     
+    <script type="text/javascript" src="islandplot.js"></script>
     <script type="text/javascript" src="linearplot.js"></script>
     <script type="text/javascript" src="linearbrush.js"></script>
     <script type="text/javascript" src="linearsample.js"></script>
+    <script type="text/javascript" src="sample.js"></script>
+
  
 
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;  <input type="checkbox" name="showGC" onchange="updateGC(this); return false" checked>Show GC plot<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;  <input type="checkbox" name="showStrand" onchange="updateStrand(this); return false" checked>Show stranded track<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;  <input type="checkbox" name="showadb" onchange="updateAdb(this); return false" checked>Show second glyph type
   </body>
 </html>

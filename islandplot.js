@@ -35,6 +35,9 @@ var IslandPlot = {
       IslandPlot.cfg.glyph_tracks = [];
       IslandPlot.cfg.plot_values = [];
       IslandPlot.cfg.plot_layout = [];
+	IslandPlot.cfg.xScale = d3.scale.linear()
+	    .range([0,cfg.radians])
+	    .domain([0, cfg.genomesize]);
       d3.select(id).select("svg").remove();
 	
 	  IslandPlot.g = d3.select(id)
@@ -550,11 +553,141 @@ var IslandPlot = {
 
     },
     
-    attachBrush: function() {
+    attachBrush: function(callbackObj) {
 	var cfg = IslandPlot.cfg;
 	var g = IslandPlot.g;
 
+	IslandPlot.cfg.brushCallbackObj = callbackObj;
+
+	IslandPlot.cfg.brushStart = 0;
+	IslandPlot.cfg.brushEnd = 0;
+	IslandPlot.cfg.brushStartBP = 0;
+	IslandPlot.cfg.brushEndBP = 0;
+
+	IslandPlot.cfg.BrushArc = d3.svg.arc()
+	.innerRadius(20)
+	.outerRadius(IslandPlot.cfg.radius-10)
+	.endAngle(function(d){return IslandPlot.cfg.xScale(0);})
+	.startAngle(function(d){return IslandPlot.cfg.xScale(0);});
+
+	g.append("path")
+	    .attr("d", IslandPlot.cfg.BrushArc)
+	    .attr("id", "polarbrush")
+	    .style("fill", "lightgrey")
+	    .style("opacity", 0.5)
+	    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+
+	var dragStart = d3.behavior.drag()
+	    .on("drag", function(d) {
+		var mx = d3.mouse(this)[0];
+		var my = d3.mouse(this)[1];
+
+		var curRadandBP = IslandPlot.calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
+						-(d3.mouse(this)[1] - (cfg.h/2)));
+
+		d3.select("#brushStart")		
+		    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
+		    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
+		
+		IslandPlot.cfg.brushStart = curRadandBP[0];
+		IslandPlot.cfg.brushStartBP = curRadandBP[1];
+		IslandPlot.moveBrush(IslandPlot.cfg.brushStart, IslandPlot.cfg.brushEnd);
+		if('undefined' !== typeof IslandPlot.cfg.brushCallbackObj) {
+		    IslandPlot.cfg.brushCallbackObj.update(IslandPlot.cfg.brushEndBP, IslandPlot.cfg.brushStartBP);
+		}
+	    });
+
+	var dragEnd = d3.behavior.drag()
+	    .on("drag", function(d) {
+		var mx = d3.mouse(this)[0];
+		var my = d3.mouse(this)[1];
+
+		var curRadandBP = IslandPlot.calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
+						-(d3.mouse(this)[1] - (cfg.h/2)));
+
+		d3.select("#brushEnd")		
+		    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
+		    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
+		
+		IslandPlot.cfg.brushEnd = curRadandBP[0];
+		IslandPlot.cfg.brushEndBP = curRadandBP[1];
+		IslandPlot.moveBrush(IslandPlot.cfg.brushStart, IslandPlot.cfg.brushEnd);
+		if('undefined' !== typeof IslandPlot.cfg.brushCallbackObj) {
+		    IslandPlot.cfg.brushCallbackObj.update(IslandPlot.cfg.brushEndBP, IslandPlot.cfg.brushStartBP);
+		}
+	    });
+
+
+	g.append("circle")
+	    .attr({
+		id: 'brushEnd',
+		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((cfg.xScale(0))-Math.PI/2))),
+		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((cfg.xScale(0))-Math.PI/2))),
+		r: 5,
+		fill: "red"
+	    })
+            .call(dragEnd);
+
+	g.append("circle")
+	    .attr({
+		id: 'brushStart',
+		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((cfg.xScale(0))-Math.PI/2))),
+		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((cfg.xScale(0))-Math.PI/2))),
+		r: 5,
+		fill: "green"
+	    })
+            .call(dragStart);
+
+	// Create the start and stop pointers
+    },
+
+    moveBrush: function(startRad, endRad) {
+	var cfg = IslandPlot.cfg;
+	var g = IslandPlot.g;
+
+	console.log("moving brush to " + startRad, endRad);
+
+	IslandPlot.cfg.BrushArc
+	    .startAngle(startRad)
+	    .endAngle(endRad);
+
+	d3.select('#polarbrush')
+	    .attr("d", IslandPlot.cfg.BrushArc);
+    },
+
+    attachBrush2: function() {
+	var cfg = IslandPlot.cfg;
+	var g = IslandPlot.g;
+
+	IslandPlot.cfg.clickOn = false;
+	IslandPlot.cfg.brushMove = false;
+	IslandPlot.cfg.brushStart = 0;
+	IslandPlot.cfg.brushEnd = 0;
+
+	IslandPlot.cfg.BrushArc = d3.svg.arc()
+	.innerRadius(20)
+	.outerRadius(IslandPlot.cfg.radius)
+	.endAngle(function(d){return IslandPlot.cfg.xScale(0);})
+	.startAngle(function(d){return IslandPlot.cfg.xScale(0);});
+
+	g.append("path")
+	    .attr("d", IslandPlot.cfg.BrushArc)
+	    .attr("class", ".polarbrush")
+	    .style("fill", "lightgrey")
+	    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+
+
 	g.on('mousemove', function() {
+	    if(IslandPlot.cfg.clickOn) {
+		// We're drawing a new brush
+		var curRadandBP = IslandPlot.calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
+						-(d3.mouse(this)[1] - (cfg.h/2)));
+
+		IslandPlot.cfg.brushEnd = curRadandBP[0];
+		IslandPlot.moveBrush(IslandPlot.cfg.brushStart, curRadandBP[0]);
+		console.log("drawing... " + IslandPlot.cfg.brushStart, curRadandBP[0]);
+	    }
+
 		var x = d3.mouse(this)[0] - (cfg.w/2);
 		var y = -(d3.mouse(this)[1] - (cfg.h/2));
 		rad = Math.PI/2 - Math.atan(y/x);// - Math.PI/2;
@@ -565,10 +698,44 @@ var IslandPlot = {
 		//		} else if(x < 0 && y < 0) {
 		//		    rad = rad + Math.PI;
 		//		}
-		console.log(x, y, rad);
+		console.log(x, y, Math.floor(cfg.xScale.invert(rad)));
 		    //		console.log(d3.mouse(this)[0], d3.mouse(this)[1]);
 	    });
+
+	g.on('mousedown', function() {
+	    IslandPlot.cfg.clickOn = true;
+	    console.log("Click on!");
+	    // Check if we're moving or redrawing a range
+	    var curRadandBP = IslandPlot.calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
+						-(d3.mouse(this)[1] - (cfg.h/2)));
+	    if(curRadandBP[1] < IslandPlot.cfg.brushEnd && curRadandBP[1] > IslandPlot.cfg.brushStart) {
+		// We're moving...
+		IslandPlot.cfg.brushMove = true;
+	    } else {
+		IslandPlot.moveBrush(curRadandBP[0], curRadandBP[0]);
+		IslandPlot.cfg.brushStart = curRadandBP[0];
+	    }
+	});
+
+	g.on('mouseup', function() {
+	    IslandPlot.cfg.clickOn = false;
+	    IslandPlot.cfg.brushMove = false;
+	    var curRadandBP = IslandPlot.calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
+						-(d3.mouse(this)[1] - (cfg.h/2)));
+	    IslandPlot.cfg.brushEnd = curRadandBP[0];
+	    IslandPlot.moveBrush(IslandPlot.cfg.brushStart, curRadandBP[0]);
+	});
+    },
+
+    calcRadBPfromXY: function(x,y) {
+	var rad = Math.PI/2 - Math.atan(y/x);
+	if(x < 0) {
+	    // II & III quadrant
+	    rad = rad + Math.PI;
+	}
+	return [rad,Math.floor(IslandPlot.cfg.xScale.invert(rad))];
     }
 
 };
+
 

@@ -26,7 +26,7 @@ var tracks = [
 
 
 var layout = {genomesize: 6200000,
-	      container: "#chart"};
+	      container: "#linearchart"};
 
 var contextLayout = {genomesize: 6200000,
 	      container: "#brush"};
