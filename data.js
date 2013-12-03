@@ -1,7 +1,7 @@
 var tracks = [
 	      { trackName: "track1",
 		trackType: "stranded",
-		visible: false,
+		visible: true,
 		inner_radius: 125,
 		outer_radius: 175,
 		items: [
@@ -14,7 +14,7 @@ var tracks = [
 			]
 	      },
 	      { trackName: "track2",
-		visible: false,
+		visible: true,
 		trackType: "stranded",
 		inner_radius: 215,
 		outer_radius: 265,
@@ -5596,7 +5596,7 @@ var tracks = [
 		    },
 	      { trackName: "track3",
 		trackType: "track",
-		visible: false,
+		visible: true,
 		inner_radius: 180,
 		outer_radius: 205,
 		items: [
@@ -6065,7 +6065,7 @@ var tracks = [
 		    },
 	      { trackName: "track4",
 		trackType: "plot",
-		visible: false,
+		visible: true,
 		plot_min: 0.4891,
 		plot_max: 0.7274,
 		plot_mean: 0.66558768401076,
