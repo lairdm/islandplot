@@ -24,9 +24,9 @@ function updateStrand(cb) {
 
 function updateAdb(cb) {
     if(cb.checked) {
-	cTrack.showTrack("track5");
+	cTrack.showGlyphTrackType("track5", "adb");
     } else {
-	cTrack.hideTrack("track5");
+	cTrack.hideGlyphTrackType("track5", "adb");
     }
 }
 

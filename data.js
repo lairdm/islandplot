@@ -1,6 +1,7 @@
 var tracks = [
 	      { trackName: "track1",
 		trackType: "stranded",
+		visible: false,
 		inner_radius: 125,
 		outer_radius: 175,
 		items: [
@@ -13,7 +14,7 @@ var tracks = [
 			]
 	      },
 	      { trackName: "track2",
-		visible: true,
+		visible: false,
 		trackType: "stranded",
 		inner_radius: 215,
 		outer_radius: 265,
@@ -5595,6 +5596,7 @@ var tracks = [
 		    },
 	      { trackName: "track3",
 		trackType: "track",
+		visible: false,
 		inner_radius: 180,
 		outer_radius: 205,
 		items: [
@@ -6063,6 +6065,7 @@ var tracks = [
 		    },
 	      { trackName: "track4",
 		trackType: "plot",
+		visible: false,
 		plot_min: 0.4891,
 		plot_max: 0.7274,
 		plot_mean: 0.66558768401076,
@@ -6080,14 +6083,14 @@ var tracks = [
 		pixel_spacing: 8,
 	        glyph_buffer: 8,
 		items: [
-			{bp: 100, type: 'vfdb'},
-			{bp: 50000, type: 'adb'},
-			{bp: 51000, type: 'adb'},
-			{bp: 52000, type: 'vfdb'},
-			{bp: 53000, type: 'adb'},
-			{bp: 54000, type: 'vfdb'},
-			{bp: 55000, type: 'adb'},
-			{bp: 56000, type: 'adb'}
+			{id: 1, bp: 100, type: 'vfdb'},
+			{id: 2, bp: 50000, type: 'adb'},
+			{id: 3, bp: 51000, type: 'adb'},
+			{id: 4, bp: 52000, type: 'vfdb'},
+			{id: 5, bp: 53000, type: 'adb'},
+			{id: 6, bp: 54000, type: 'vfdb'},
+			{id: 7, bp: 55000, type: 'adb'},
+			{id: 8, bp: 56000, type: 'adb'}
 	           ]
 		      }
       ];

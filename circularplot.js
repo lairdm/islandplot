@@ -70,6 +70,10 @@ function circularTrack(layout,tracks) {
 	    this.drawTrack(i);
 	    break;
 	case "glyph":
+	    this.findGlyphTypes(i);
+	    this.tracks[i].container = 
+		this.g.append("g")
+		.attr("class", tracks[i].trackName + "_glyph_container")
 	    this.drawGlyphTrack(i);
 	    break;
 	default:
@@ -379,38 +383,61 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     var track = this.tracks[i];
     var stack_count = 0;
 
-    var x = function(d,i,proximity) { return cfg.w/2 + (((proximity == true ? (track.glyph_buffer * stack_count) : 0) + track.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
-    var y = function(d,i,proximity) { return cfg.h/2 + (((proximity == true ? (track.glyph_buffer * stack_count) : 0) + track.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+    var items = track.items.filter(function(d) { return track.visTypes.contains(d.type) } );
 
-    var test_proximity = function(d,i) {
-	var xs = 0;
-	var ys = 0;
+    // Because on update the order of processing changes we need
+    // to recompute the stacking order manually each time
+    for(var i = 0; i < items.length; i++) {
+	if(i < 1) {
+	    items[i].stackCount = 0;
+	    continue;
+	}
 
-	if(i < 1) { return false; }
-
-	xs = (cfg.h/2 + (track.radius*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2))) -
-	(cfg.h/2 + (track.radius*Math.sin((track.items[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
-	ys = (cfg.h/2 + (track.radius*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2))) -
-	(cfg.h/2 + (track.radius*Math.cos((track.items[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	xs = (cfg.h/2 + (track.radius*Math.sin((items[i].bp*cfg.radians_pre_bp)-Math.PI/2))) -
+	(cfg.h/2 + (track.radius*Math.sin((items[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	ys = (cfg.h/2 + (track.radius*Math.cos((items[i].bp*cfg.radians_pre_bp)-Math.PI/2))) -
+	(cfg.h/2 + (track.radius*Math.cos((items[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
 	xs = xs * xs;
 	ys = ys * ys;
 	var dist = Math.sqrt(xs + ys);
 
-	if(dist < track.pixel_spacing) { stack_count++; return true; }
+	if(dist < track.pixel_spacing) { 
+	    items[i].stackCount = items[i-1].stackCount + 1; 
+	    continue;
+	}
 
-	stack_count = 0;
-	return false;
+	items[i].stackCount = 0;
     }
 
-    var track = g.selectAll('.' + track.trackName)
-    .data(track.items)
-    .enter()
+    var x = function(d,i) { return cfg.w/2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+    var y = function(d,i) { return cfg.h/2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+
+    var trackPath = track.container.selectAll("path")
+    .data(items, function(d) { return d.id; });
+
+    trackPath.transition()
+    .duration(1000)
+    .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
+		+ y(d,i) + ")" });    
+
+    trackPath.enter()
     .append('path')
+    .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
     .attr('class', function(d) {return track.trackName + '_' + d.type})
     .attr("d", d3.svg.symbol().type(track.glyphType))
-    .attr("transform", function(d,i) { var proximity = test_proximity(d,i); 
-				       return "translate(" + x(d,i, proximity) + ","
-				       + y(d,i, proximity) + ")" })
+    .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
+				       + y(d,i) + ")" })
+    .style("opacity", 0)
+    .transition()
+    .duration(1000)
+    .style("opacity", 1)
+
+    trackPath.exit()
+    .transition()
+    .duration(1000)
+    .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
+    .style("opacity", 0)
+    .remove()
 
 }
 
@@ -605,6 +632,51 @@ circularTrack.prototype.hideTrack = function(name) {
 
 }
 
+circularTrack.prototype.hideGlyphTrackType = function(name, type) {
+    var i = this.findTrackbyName(name);
+
+    // We didn't find the track by that name
+    if(i < 0) {
+	return;
+    }
+
+    if(tracks[i].trackType !== "glyph") {
+	// Wrong track type, bail
+	return;
+    }
+
+    for(var j = 0; j < this.tracks[i].visTypes.length; j++) {
+	if(this.tracks[i].visTypes[j] == type) {
+	    this.tracks[i].visTypes.splice(j, 1);
+	    j--;
+	}
+    }
+
+    this.drawGlyphTrack(i);
+
+}
+
+circularTrack.prototype.showGlyphTrackType = function(name, type) {
+    var i = this.findTrackbyName(name);
+
+    // We didn't find the track by that name
+    if(i < 0) {
+	return;
+    }
+
+    if(tracks[i].trackType !== "glyph") {
+	// Wrong track type, bail
+	return;
+    }
+
+    if(! this.tracks[i].visTypes.contains(type) ) {
+	this.tracks[i].visTypes.push(type);
+    }
+
+    this.drawGlyphTrack(i);
+
+}
+
 ////////////////////////////////////////////////
 //
 // Helper functions
@@ -622,6 +694,35 @@ circularTrack.prototype.findTrackbyName = function(name) {
 
     return -1;
 
+}
+
+circularTrack.prototype.findGlyphTypes = function(i) {
+
+    var classes = [];
+
+    if('undefined' == typeof this.tracks[i].visItems) {
+	this.tracks[i].visTypes = [];
+    }
+
+    for(var j=0; j < this.tracks[i].items.length; j++) {
+	if(! this.tracks[i].visTypes.contains(this.tracks[i].items[j].type)) {
+	    this.tracks[i].visTypes.push(this.tracks[i].items[j].type);
+	    classes.push(this.tracks[i].trackName + "_" + this.tracks[i].items[j].type);
+	}
+    }
+
+    this.tracks[i].visClasses = classes.join(' ');
+
+}
+
+Array.prototype.contains = function(obj) {
+    var i = this.length;
+    while (i--) {
+        if (this[i] == obj) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // If we're displaying a stranded track, calculate
