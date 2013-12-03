@@ -1,43 +1,65 @@
-var margin = {top: 10, right: 40, bottom: 150, left: 60},
-width = 940 - margin.left - margin.right,
-height = 500 - margin.top - margin.bottom,
-contextHeight = 50;
-contextWidth = width * .5;
+var linearTrackDefaults = {
+    width: 940,
+    height: 500,
+    left_margin: 15,
+    right_margin: 15,
+    bottom_margin: 50,
+    axis_height: 150,
+    name: "defaultlinear",
+}
 
 function genomeTrack(layout,tracks) {
 
     this.tracks = tracks;
     this.layout = layout;
     this.numTracks = this.countTracks();
-    //    this.numTracks = tracks.length;
+
+    if('undefined' !== typeof layout) {
+	// Copy over any defaults not passed in
+	// by the user
+	for(var i in linearTrackDefaults) {
+	    if('undefined' == typeof layout[i]) {
+		this.layout[i] = linearTrackDefaults[i];
+	    }
+	}
+    }
+
+    this.layout.width_without_margins =
+	this.layout.width - this.layout.left_margin -
+	this.layout.right_margin;
+
+    this.layout.height_without_axis = this.layout.height -
+	this.layout.axis_height;
+
     this.itemRects = [];
 
     this.x = d3.scale.linear()
 	.domain([0, layout.genomesize])
-	.range([0,width]);
+	.range([0,this.layout.width_without_margins]);
     this.x1 = d3.scale.linear()
-	.range([0,width])
+	.range([0,this.layout.width_without_margins])
        	.domain([0, layout.genomesize]);
     this.y1 = d3.scale.linear()
 	.domain([0,this.numTracks])
-	.range([0,height]);
+	.range([0,this.layout.height_without_axis]);
 
     this.chart = d3.select(layout.container)
 	.append("svg")
-	.attr("width", width + margin.left + margin.right)
-	.attr("height", height + margin.top + margin.bottom)
+	.attr("width", this.layout.width)
+	.attr("height", this.layout.height)
 	.attr("class", "mainTracks");
 
     this.chart.append("defs").append("clipPath")
-	.attr("id", "trackClip")
+	.attr("id", "trackClip_" + this.layout.name)
 	.append("rect")
-	.attr("width", width)
-	.attr("height", height);
+	.attr("width", this.layout.width_without_margins)
+	.attr("height", this.layout.height)
+	.attr("transform", "translate(" + this.layout.left_margin + ",0)");
     
     this.main = this.chart.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-	.attr("width", width)
-	.attr("height", height)
+       	.attr("transform", "translate(" + this.layout.left_margin + ",0)")
+	.attr("width", this.layout.width_without_margins)
+	.attr("height", this.layout.height)
 	.attr("class", "mainTrack");
 
     // Start with showing the entire genome
@@ -46,15 +68,18 @@ function genomeTrack(layout,tracks) {
 
     this.axisContainer = this.chart.append("g")
 	.attr('class', 'trackAxis')
-	.attr("transform", "translate(" + 0 + "," + height + ")");
+	.attr('width', this.layout.width_without_margins)
+	.attr("transform", "translate(" + (this.layout.left_margin + 15) + "," + this.layout.height_without_axis + ")");
 
     this.xAxis = d3.svg.axis().scale(this.x1).orient("bottom")
 	.tickFormat(d3.format("s"));
 
     this.axisContainer.append("g")
-    .attr("class", "x axis bottom")
-    .attr("transform", "translate(0," + 10 + ")")
-    .call(this.xAxis);
+	.attr("class", "x axis bottom")
+	.attr('width', this.layout.width_without_margins)
+
+	.attr("transform", "translate(0," + 10 + ")")
+	.call(this.xAxis);
 
 
     for(var i=0; i < tracks.length; i++) {
@@ -65,13 +90,15 @@ function genomeTrack(layout,tracks) {
 	case "stranded":
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", tracks[i].trackName)
-		.attr("clip-path", "url(#clipPath)");
+		.attr("width", this.layout.width_without_margins)
+		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
 	    this.displayStranded(tracks[i], i);
 	    break;
 	case "track":
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", tracks[i].trackName)
-		.attr("clip-path", "url(#clipPath)");
+		.attr("width", this.layout.width_without_margins)
+		.attr("clip-path", "url(#clipPath_" + this.layout.name + ")");
 	    this.displayTrack(tracks[i], i);
 	    break;
 	default:
@@ -124,7 +151,9 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     .attr("x", function(d) {return x1(d.start);})
     .attr("y", function(d) {return y1(i) + 10 + (d.strand == -1 ? y1(1)/2: (.2 * y1(1)/2))})
     .attr("width", function(d) {return x1(d.end) - x1(d.start);})
-    .attr("height", function(d) {return .8 * y1(1)/2;});
+    .attr("height", function(d) {return .8 * y1(1)/2;})
+    .attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+
 
     rects.exit().remove();
 }
@@ -149,7 +178,8 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     .attr("x", function(d) {return x1(d.start);})
     .attr("y", function(d) {return y1(i) + 10})
     .attr("width", function(d) {return x1(d.end) - x1(d.start);})
-    .attr("height", function(d) {return .8 * y1(1);});
+    .attr("height", function(d) {return .8 * y1(1);})
+    .attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
 
     rects.exit().remove();
 }
