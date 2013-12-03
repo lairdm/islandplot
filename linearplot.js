@@ -8,7 +8,8 @@ function genomeTrack(layout,tracks) {
 
     this.tracks = tracks;
     this.layout = layout;
-    this.numTracks = tracks.length;
+    this.numTracks = this.countTracks();
+    //    this.numTracks = tracks.length;
     this.itemRects = [];
 
     this.x = d3.scale.linear()
@@ -67,6 +68,12 @@ function genomeTrack(layout,tracks) {
 		.attr("clip-path", "url(#clipPath)");
 	    this.displayStranded(tracks[i], i);
 	    break;
+	case "track":
+	    this.itemRects[i] = this.main.append("g")
+		.attr("class", tracks[i].trackName)
+		.attr("clip-path", "url(#clipPath)");
+	    this.displayTrack(tracks[i], i);
+	    break;
 	default:
 	    // Do nothing for an unknown track type
 	}
@@ -74,15 +81,38 @@ function genomeTrack(layout,tracks) {
 
 }
 
+// We can't display all track types, or some don't
+// add to the stacking (ie. graph type)
+
+genomeTrack.prototype.countTracks = function() {
+    var track_count = 0;
+
+     for(var i=0; i < tracks.length; i++) {
+
+	switch(tracks[i].trackType) {
+	case "stranded":
+	    track_count++;
+	    break;
+	case "track":
+	    track_count++;
+	    break;
+	default:
+	    // Do nothing for an unknown track type
+	}
+    }
+   
+    return track_count;
+}
+
 genomeTrack.prototype.displayStranded = function(track, i) {
     var visStart = this.visStart,
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
-    console.log(visStart, visEnd);
+    //    console.log(visStart, visEnd);
     var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
 
-    console.log(track.items);
+    //    console.log(track.items);
 
     var rects = this.itemRects[i].selectAll("rect")
     .data(visItems, function(d) { return d.id; })
@@ -99,12 +129,37 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     rects.exit().remove();
 }
 
+genomeTrack.prototype.displayTrack = function(track, i) {
+    var visStart = this.visStart,
+    visEnd = this.visEnd,
+    x1 = this.x1,
+    y1 = this.y1;
+    //    console.log(visStart, visEnd);
+    var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
+
+    //    console.log(track.items);
+
+    var rects = this.itemRects[i].selectAll("rect")
+    .data(visItems, function(d) { return d.id; })
+    .attr("x", function(d) {return x1(d.start);})
+    .attr("width", function(d) {return x1(d.end) - x1(d.start);});
+
+    rects.enter().append("rect")
+    .attr("class", function(d) {return track.trackName;})
+    .attr("x", function(d) {return x1(d.start);})
+    .attr("y", function(d) {return y1(i) + 10})
+    .attr("width", function(d) {return x1(d.end) - x1(d.start);})
+    .attr("height", function(d) {return .8 * y1(1);});
+
+    rects.exit().remove();
+}
+
 genomeTrack.prototype.displayAxis = function() {
     this.axisContainer.select(".x.axis.bottom").call(this.xAxis);
 }
 
 genomeTrack.prototype.update = function(startbp, endbp) {
-    console.log(startbp, endbp);
+    //    console.log(startbp, endbp);
 
     this.visStart = startbp;
     this.visEnd = endbp;
@@ -116,6 +171,9 @@ genomeTrack.prototype.update = function(startbp, endbp) {
 	switch(this.tracks[i].trackType) {
 	case "stranded":
 	    this.displayStranded(this.tracks[i], i);
+	    break;
+	case "track":
+	    this.displayTrack(this.tracks[i], i);
 	    break;
 	default:
 	    // Do nothing for an unknown track type

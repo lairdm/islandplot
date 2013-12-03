@@ -21,6 +21,17 @@
     stroke-width: 6;	
 }
 
+.track1_pos:hover {
+    fill: red;
+    stroke-width: 6;	
+}
+
+.track1_neg:hover {
+    fill: red;
+    fill-opacity: .9;
+    stroke-width: 6;	
+}
+
 .track2_pos {
     fill: slategray;
     fill-opacity: .7;
@@ -31,6 +42,30 @@
     fill: green;
     fill-opacity: .7;
     stroke-width: 6;	
+}
+
+.track3 {
+    fill: red;
+    fill-opacity: .7;
+    stroke-width: 6;
+}
+
+.track3:hover {
+    fill: blue;
+    fill-opacity: .9;
+    stroke-width: 6;
+}
+
+.track4 {
+    stroke: blue;
+}
+
+.track5_vfdb {
+    fill: blue;
+}
+
+.track5_adb {
+    fill: green;
 }
 
 .trackAxis .domain {
@@ -48,4 +83,17 @@
     stroke: gray;
     fill: dodgerblue;
     fill-opacity: .365;
+}
+
+.polarbrush {
+    fill: lightgrey;
+    opacity: 0.5;
+}
+
+.brushEnd {
+    fill: "red";
+}
+
+.brushStart {
+    fill: "green";
 }
