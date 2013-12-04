@@ -23,7 +23,8 @@ Data format
 
 The data passed in must be an array of track objects (see included data.js for sample data).  Each track has the format of:
 
-  { trackName: "track1",
+```
+{ trackName: "track1",
                 trackType: "stranded",
                 visible: true,
                 inner_radius: 125,
@@ -33,4 +34,4 @@ The data passed in must be an array of track objects (see included data.js for s
 			 ...
                         ]
               }
-
+```
