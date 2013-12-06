@@ -48,10 +48,10 @@ function circularTrack(layout,tracks) {
     this.drawAxis();
 
     // Draw the plots
-    for(var i=0; i < tracks.length; i++) {
+    for(var i=0; i < this.tracks.length; i++) {
 
-	if('undefined' !== typeof tracks[i].visible) {
-	    if(! tracks[i].visible) {
+	if('undefined' !== typeof this.tracks[i].visible) {
+	    if(! this.tracks[i].visible) {
 		continue;
 	    }
 	}
@@ -59,7 +59,7 @@ function circularTrack(layout,tracks) {
 	// We're going to see what type of tracks we have
 	// and dispatch them appropriately
 
-	switch(tracks[i].trackType) {
+	switch(this.tracks[i].trackType) {
 	case "plot":
 	    this.drawPlot(i);
 	    break;
@@ -73,7 +73,7 @@ function circularTrack(layout,tracks) {
 	    this.findGlyphTypes(i);
 	    this.tracks[i].container = 
 		this.g.append("g")
-		.attr("class", tracks[i].trackName + "_glyph_container")
+		.attr("class", this.tracks[i].trackName + "_glyph_container")
 	    this.drawGlyphTrack(i);
 	    break;
 	default:
@@ -316,7 +316,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	this.drawCircle(track.trackName, (track.inner_radius + track.outer_radius)/2, track.centre_line_stroke, animate);
       }
 
-    tracks[i].visible = true;
+    this.tracks[i].visible = true;
 
 }
 
@@ -337,8 +337,8 @@ circularTrack.prototype.moveTrack = function(i, innerRadius, outerRadius) {
     .attr("d", arcShrink)
 
     // Just record the new radii in case we need them later
-    tracks[i].inner_radius = innerRadius;
-    tracks[i].outer_radius = outerRadius;
+    this.tracks[i].inner_radius = innerRadius;
+    this.tracks[i].outer_radius = outerRadius;
 }
 
 circularTrack.prototype.removeTrack = function(i) {
@@ -363,7 +363,7 @@ circularTrack.prototype.removeTrack = function(i) {
 	this.removeCircle(track.trackName);
     }
 
-    tracks[i].visible = false;
+    this.tracks[i].visible = false;
 
 }
 
@@ -579,7 +579,7 @@ circularTrack.prototype.showTrack = function(name) {
 	return;
     }
 
-    switch(tracks[i].trackType) {
+    switch(this.tracks[i].trackType) {
     case "plot":
     this.drawPlot(i, true);
         break;
@@ -612,7 +612,7 @@ circularTrack.prototype.hideTrack = function(name) {
 	return;
     }
 
-    switch(tracks[i].trackType) {
+    switch(this.tracks[i].trackType) {
     case "plot":
         this.removePlot(i);
         break;
@@ -664,7 +664,7 @@ circularTrack.prototype.showGlyphTrackType = function(name, type) {
 	return;
     }
 
-    if(tracks[i].trackType !== "glyph") {
+    if(this.tracks[i].trackType !== "glyph") {
 	// Wrong track type, bail
 	return;
     }
@@ -761,3 +761,4 @@ function calcRadBPfromXY (x,y,xScale) {
     }
     return [rad,Math.floor(xScale.invert(rad))];
 }
+
