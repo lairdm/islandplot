@@ -6082,6 +6082,7 @@ var tracks = [
 		radius: 75,
 		pixel_spacing: 8,
 	        glyph_buffer: 8,
+		glyphSize: 20,
 		items: [
 			{id: 1, bp: 100, type: 'vfdb'},
 			{id: 2, bp: 50000, type: 'adb'},

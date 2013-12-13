@@ -424,7 +424,7 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     .append('path')
     .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
     .attr('class', function(d) {return track.trackName + '_' + d.type})
-    .attr("d", d3.svg.symbol().type(track.glyphType))
+    .attr("d", d3.svg.symbol().type(track.glyphType).size(track.glyphSize))
     .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
 				       + y(d,i) + ")" })
     .style("opacity", 0)
