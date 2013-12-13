@@ -640,7 +640,7 @@ circularTrack.prototype.hideGlyphTrackType = function(name, type) {
 	return;
     }
 
-    if(tracks[i].trackType !== "glyph") {
+    if(this.tracks[i].trackType !== "glyph") {
 	// Wrong track type, bail
 	return;
     }
