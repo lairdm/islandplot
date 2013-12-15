@@ -44,6 +44,8 @@ function circularTrack(layout,tracks) {
 	.append("g")
 	.attr("transform", "translate(" + this.layout.TranslateX + "," + this.layout.TranslateY + ")");
 
+    this.g.append("defs");
+
     // Now we can start drawing the plots, first the basic axis...
     this.drawAxis();
 
