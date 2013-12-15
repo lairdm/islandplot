@@ -30,3 +30,6 @@ function updateAdb(cb) {
     }
 }
 
+function saveImage() {
+    cTrack.saveRaster(4.0, "islandviewer.png", "tracks.css");
+}

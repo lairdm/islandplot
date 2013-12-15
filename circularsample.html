@@ -25,6 +25,9 @@
       <div id="circularchart"></div>
     </div>
     
+    <script type="text/javascript" src="canvg/rgbcolor.js"></script>
+    <script type="text/javascript" src="canvg/canvg.js"></script>
+    <script type="text/javascript" src="FileSaver/FileSaver.js"></script>
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="circularplot.js"></script>
     <script type="text/javascript" src="circularsample.js"></script>
@@ -36,5 +39,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;  <input type="checkbox" name="showStrand" onchange="updateStrand(this); return false" checked>Show stranded track<br />
 &nbsp;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;  <input type="checkbox" name="showvfdb" onchange="updateAdb(this); return false" checked>Show adb glyph type
+&nbsp;<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;  <button name="saveImage" onclick="saveImage(); return false">Save Image</button>
   </body>
 </html>
