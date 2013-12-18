@@ -11,6 +11,7 @@ var circularTrackDefaults = {
     radians: 2 * Math.PI,
     spacing: 100000,
     legend_spacing: 5,
+    min_radians: .02 * Math.PI,
 }
 
 function circularTrack(layout,tracks) {
@@ -31,6 +32,8 @@ function circularTrack(layout,tracks) {
 
     // Setup some constants we'll need and build the canvas
     this.layout.radians_pre_bp = this.layout.radians/this.layout.genomesize;
+    this.layout.min_bp_per_slice = this.layout.min_radians / this.layout.radians_pre_bp;
+    this.layout.min_bp_per_slice_half = this.layout.min_bp_per_slice/2;
     this.layout.radius = this.layout.factor*Math.min(this.layout.w/2, this.layout.h/2);
     this.xScale = d3.scale.linear()
 	.range([0,this.layout.radians])
@@ -288,8 +291,18 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .outerRadius(function(d){ return (('undefined' == typeof animate) ? 
 				      calcOuterRadius(track.inner_radius, track.outer_radius, d.strand)
 				      : 2);})
-    .startAngle(function(d){return cfg.radians_pre_bp*d.start;})
-    .endAngle(function(d){return cfg.radians_pre_bp*d.end;})
+    .startAngle(function(d){if(track.min_slice && (d.end - d.start) < cfg.min_bp_per_slice) {
+		return (d.start - ((d.end - d.start - cfg.min_bp_per_slice_half) / 2))*cfg.radians_pre_bp;
+	    } else {
+		return cfg.radians_pre_bp*d.start;
+	    }
+	})
+    .endAngle(function(d){if(track.min_slice && (d.end - d.start) < cfg.min_bp_per_slice) {
+		return (d.end + ((d.end - d.start - cfg.min_bp_per_slice_half)/2))*cfg.radians_pre_bp;
+	    } else {
+		return cfg.radians_pre_bp*d.end;
+	    }
+	});
       
     // Draw the track, putting in elements such as hover colour change
     // if one exists, click events, etc
@@ -299,13 +312,31 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .append("path")
     .attr("d", arc)
     .attr("class", function(d) { return track.trackName + ('undefined' !== typeof d.strand ? '_' + (d.strand == 1 ? 'pos' : 'neg') : '') })
-    //      .style("fill", function(d) { return ('undefined' !== typeof d.fill) ? d.fill : track_layout.fill})
     .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.mouseclick) {
-		track.mouseclick(d,i);
+		var fn = window[track.mouseclick];
+		return fn(d);
+	    } else {
+		null;
 	    }
-	});
+	})
+    .on("mouseover", function(d, i) {
+	    if('undefined' !== typeof track.mouseover_callback) {
+		var fn = window[track.mouseover_callback];
+		return fn(d);
+	    } else {
+		return null;
+	    }
+	})
+    .on("mouseout", function(d, i) {
+    	    if('undefined' !== typeof track.mouseover_callback) {
+		var fn = window[track.mouseout_callback];
+		return fn(d);
+    	    } else {
+		return null;
+	    }
+    	});
 
     // If we're doing an animated addition, move the track out to its
     // new spot
@@ -330,8 +361,22 @@ circularTrack.prototype.moveTrack = function(i, innerRadius, outerRadius) {
     var arcShrink = d3.svg.arc()
     .innerRadius(function(d){return calcInnerRadius(innerRadius, outerRadius, d.strand);})
     .outerRadius(function(d){return calcOuterRadius(innerRadius, outerRadius, d.strand);})
-    .endAngle(function(d){return cfg.radians_pre_bp*d.start;})
-    .startAngle(function(d){return cfg.radians_pre_bp*d.end;});
+    .startAngle(function(d){if(track.min_slice && (d.end - d.start) < cfg.min_bp_per_slice) {
+		return (d.start - ((d.end - d.start - cfg.min_bp_per_slice_half) / 2))*cfg.radians_pre_bp;
+	    } else {
+		return cfg.radians_pre_bp*d.start;
+	    }
+	})
+    .endAngle(function(d){if(track.min_slice && (d.end - d.start) < cfg.min_bp_per_slice) {
+		return (d.end + ((d.end - d.start - cfg.min_bp_per_slice_half)/2))*cfg.radians_pre_bp;
+	    } else {
+		return cfg.radians_pre_bp*d.end;
+	    }
+	});
+ 
+
+    //   .endAngle(function(d){return cfg.radians_pre_bp*d.start;})
+    //    .startAngle(function(d){return cfg.radians_pre_bp*d.end;});
 
     g.selectAll("." + track.trackName + ", ." + track.trackName + "_pos, ." + track.trackName + "_neg")
     .transition()
@@ -846,3 +891,9 @@ function calcRadBPfromXY (x,y,xScale) {
     return [rad,Math.floor(xScale.invert(rad))];
 }
 
+function calcMinSliceSize () {
+    var cfg = this.layout;
+
+    
+    //cfg.radians_pre_bp
+}

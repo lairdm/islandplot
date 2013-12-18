@@ -2,9 +2,6 @@ var circularlayout = {genomesize: 6264404,
 		      container: "#circularchart",
         };
 
-var cTrack = new circularTrack(circularlayout, tracks);
-cTrack.attachBrush(linearTrack);
-
 function updateGC(cb) {
     if(cb.checked) {
 	cTrack.showTrack("track4");
@@ -33,3 +30,20 @@ function updateAdb(cb) {
 function saveImage() {
     cTrack.saveRaster(4.0, "islandviewer.png", "tracks.css");
 }
+
+// Demo of the hover over timer, we had to
+// do it this way to get around IE <9 not supporting
+// parameters to the function called by setTimeout()
+var timer;
+var d_callback;
+function islandPopup(d) {
+    d_callback = d;
+    timer = setTimeout(function() {console.log(d_callback);}, 1000);
+}
+
+function islandPopupClear(d) {
+    clearTimeout(timer);
+}
+
+var cTrack = new circularTrack(circularlayout, tracks);
+cTrack.attachBrush(linearTrack);

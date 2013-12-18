@@ -4,8 +4,9 @@ var tracks = [
 		visible: true,
 		inner_radius: 125,
 		outer_radius: 175,
-		mouseover_callback: islandpopup,
-		mouseover_timeout: 1000,
+		mouseclick: 'islandPopup',
+		mouseover_callback: 'islandPopup',
+		mouseout_callback: 'islandPopupClear',
 		items: [
                          {id: 1, start:0, end:30000, name:"island0", strand: -1},
                          {id: 2, start:60000,end:100000, name:"island1", strand: -1},
@@ -5599,6 +5600,7 @@ var tracks = [
 	      { trackName: "track3",
 		trackType: "track",
 		visible: true,
+		min_slice: true,
 		inner_radius: 180,
 		outer_radius: 205,
 		items: [
