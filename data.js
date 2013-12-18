@@ -4,6 +4,8 @@ var tracks = [
 		visible: true,
 		inner_radius: 125,
 		outer_radius: 175,
+		mouseover_callback: islandpopup,
+		mouseover_timeout: 1000,
 		items: [
                          {id: 1, start:0, end:30000, name:"island0", strand: -1},
                          {id: 2, start:60000,end:100000, name:"island1", strand: -1},
