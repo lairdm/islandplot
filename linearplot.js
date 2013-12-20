@@ -3,7 +3,7 @@ var linearTrackDefaults = {
     height: 500,
     left_margin: 15,
     right_margin: 15,
-    bottom_margin: 50,
+    bottom_margin: 10,
     axis_height: 150,
     name: "defaultlinear",
 }
@@ -41,7 +41,7 @@ function genomeTrack(layout,tracks) {
        	.domain([0, layout.genomesize]);
     this.y1 = d3.scale.linear()
 	.domain([0,this.numTracks])
-	.range([0,this.layout.height_without_axis]);
+	.range([0,(this.layout.height_without_axis-this.layout.bottom_margin)]);
 
     this.chart = d3.select(layout.container)
 	.append("svg")
@@ -82,24 +82,29 @@ function genomeTrack(layout,tracks) {
 	.call(this.xAxis);
 
 
-    for(var i=0; i < tracks.length; i++) {
+    for(var i=0; i < this.tracks.length; i++) {
 	// We're going to see what type of tracks we have
 	// and dispatch them appropriately
 
-	switch(tracks[i].trackType) {
+	 if("undefined" !== this.tracks[i].skipLinear
+	    &&  this.tracks[i].skipLinear == true) {
+	     continue;
+	 }
+
+	switch(this.tracks[i].trackType) {
 	case "stranded":
 	    this.itemRects[i] = this.main.append("g")
-		.attr("class", tracks[i].trackName)
+		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
 		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
-	    this.displayStranded(tracks[i], i);
+	    this.displayStranded(this.tracks[i], i);
 	    break;
 	case "track":
 	    this.itemRects[i] = this.main.append("g")
-		.attr("class", tracks[i].trackName)
+		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
 		.attr("clip-path", "url(#clipPath_" + this.layout.name + ")");
-	    this.displayTrack(tracks[i], i);
+	    this.displayTrack(this.tracks[i], i);
 	    break;
 	default:
 	    // Do nothing for an unknown track type
@@ -114,13 +119,22 @@ function genomeTrack(layout,tracks) {
 genomeTrack.prototype.countTracks = function() {
     var track_count = 0;
 
-     for(var i=0; i < tracks.length; i++) {
+     for(var i=0; i < this.tracks.length; i++) {
 
-	switch(tracks[i].trackType) {
+	 if("undefined" !== this.tracks[i].skipLinear
+	    &&  this.tracks[i].skipLinear == true) {
+	     continue;
+	 }
+
+	switch(this.tracks[i].trackType) {
 	case "stranded":
+	    // a linear track counts as two
+	    track_count++;
+	    this.tracks[i].stackNum = track_count;
 	    track_count++;
 	    break;
 	case "track":
+	    this.tracks[i].stackNum = track_count;
 	    track_count++;
 	    break;
 	default:
@@ -136,6 +150,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
+    var stackNum = this.tracks[i].stackNum
     //    console.log(visStart, visEnd);
     var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
 
@@ -149,9 +164,11 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     rects.enter().append("rect")
     .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg');})
     .attr("x", function(d) {return x1(d.start);})
-    .attr("y", function(d) {return y1(i) + 10 + (d.strand == -1 ? y1(1)/2: (.2 * y1(1)/2))})
+    .attr("y", function(d) {return y1((d.strand == -1 ? stackNum : stackNum-1)) + 10})
+    //    .attr("y", function(d) {return y1(i) + 10 + (d.strand == -1 ? y1(1)/2: (.2 * y1(1)/2))})
     .attr("width", function(d) {return x1(d.end) - x1(d.start);})
-    .attr("height", function(d) {return .8 * y1(1)/2;})
+    .attr("height", function(d) {return .8 * y1(1);})
+    //    .attr("height", function(d) {return .8 * y1(1)/2;})
     .attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
 
 
@@ -163,6 +180,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
+    var stackNum = this.tracks[i].stackNum
     //    console.log(visStart, visEnd);
     var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
 
@@ -176,7 +194,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     rects.enter().append("rect")
     .attr("class", function(d) {return track.trackName;})
     .attr("x", function(d) {return x1(d.start);})
-    .attr("y", function(d) {return y1(i) + 10})
+    .attr("y", function(d) {return y1(stackNum) + 10})
     .attr("width", function(d) {return x1(d.end) - x1(d.start);})
     .attr("height", function(d) {return .8 * y1(1);})
     .attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
@@ -197,6 +215,11 @@ genomeTrack.prototype.update = function(startbp, endbp) {
     this.x1.domain([startbp,endbp]);
 
     for(var i = 0; i < this.tracks.length; i++) {
+
+	 if("undefined" !== this.tracks[i].skipLinear
+	    &&  this.tracks[i].skipLinear == true) {
+	     continue;
+	 }
 
 	switch(this.tracks[i].trackType) {
 	case "stranded":

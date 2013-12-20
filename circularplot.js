@@ -522,7 +522,7 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
     .endAngle(function(d){return xScale(0);})
     .startAngle(function(d){return xScale(0);});
 
-    g.append("path")
+    g.insert("path", "defs")
     .attr("d", this.brushArc)
     .attr("id", "polarbrush")
     .attr("class", "polarbrush")
@@ -537,6 +537,11 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 					      -(d3.mouse(this)[1] - (cfg.h/2)),
 					      xScale);
 
+	    // Don't allow the brush to go beyond the other
+	    if(curRadandBP[0] >= self.brushEnd) {
+		return;
+	    }
+
 	    d3.select("#brushStart")		
 	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
 	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
@@ -545,7 +550,7 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 	    self.brushStartBP = curRadandBP[1];
 	    self.moveBrush(self.brushStart, self.brushEnd);
 	    if('undefined' !== typeof self.brushCallbackObj) {
-		self.brushCallbackObj.update(self.brushEndBP, self.brushStartBP);
+		self.brushCallbackObj.update(self.brushStartBP, self.brushEndBP);
 	    }
 	});
 
@@ -558,6 +563,11 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 					      -(d3.mouse(this)[1] - (cfg.h/2)),
 					      xScale);
 
+	    // Don't allow the brush to go beyond the other
+	    if(curRadandBP[0] <= self.brushStart) {
+		return;
+	    }
+
 	    d3.select("#brushEnd")		
 	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
 	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
@@ -566,22 +576,24 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 	    self.brushEndBP = curRadandBP[1];
 	    self.moveBrush(self.brushStart, self.brushEnd);
 	    if('undefined' !== typeof self.brushCallbackObj) {
-		self.brushCallbackObj.update(self.brushEndBP, self.brushStartBP);
+		self.brushCallbackObj.update(self.brushStartBP, self.brushEndBP);
 	    }
 	});
 
-    g.append("circle")
+    this.endBrushObj = g.append("circle")
     .attr({
 	    id: 'brushEnd',
+	    class: 'brushEnd',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
 		r: 5,
 	    })
             .call(dragEnd);
 
-    g.append("circle")
+    this.startBrushObj = g.append("circle")
     .attr({
 	    id: 'brushStart',
+	    class: 'brushStart',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
 		r: 5,
@@ -606,6 +618,51 @@ circularTrack.prototype.moveBrush = function(startRad, endRad) {
     .attr("d", this.brushArc);
     
 }
+
+circularTrack.prototype.moveBrushbyBP = function(startbp, endbp) {
+    var cfg = this.layout;
+
+    var startRad = startbp*this.layout.radians_pre_bp;
+    var endRad = endbp*this.layout.radians_pre_bp;
+    this.moveBrush(startRad,endRad);
+
+    this.brushStart = startRad;
+    this.brushStartBP = startbp;
+    d3.select("#brushStart")		
+    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
+    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
+
+    this.brushEnd = endRad;
+    this.brushEndBP = endbp;
+    d3.select("#brushEnd")		
+    .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
+    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(endRad-Math.PI/2)));
+
+
+}
+
+circularTrack.prototype.hideBrush = function() {
+    d3.select("#brushStart")
+    .style("visibility", "hidden");
+
+    d3.select("#brushEnd")
+    .style("visibility", "hidden");
+
+    d3.select('#polarbrush')
+    .style("visibility", "hidden");
+}
+
+circularTrack.prototype.showBrush = function() {
+    d3.select("#brushStart")
+    .style("visibility", "visible");
+
+    d3.select("#brushEnd")
+    .style("visibility", "visible");
+
+    d3.select('#polarbrush')
+    .style("visibility", "visible");
+}
+
 
 ////////////////////////////////////////////////
 //
