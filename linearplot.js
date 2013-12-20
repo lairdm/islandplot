@@ -3,8 +3,8 @@ var linearTrackDefaults = {
     height: 500,
     left_margin: 15,
     right_margin: 15,
-    bottom_margin: 10,
-    axis_height: 150,
+    bottom_margin: 5,
+    axis_height: 50,
     name: "defaultlinear",
 }
 
