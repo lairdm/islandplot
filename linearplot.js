@@ -43,11 +43,18 @@ function genomeTrack(layout,tracks) {
 	.domain([0,this.numTracks])
 	.range([0,(this.layout.height_without_axis-this.layout.bottom_margin)]);
 
+    this.zoom = d3.behavior.zoom()
+	//	.x(this.x1)
+	.on("zoom", this.rescale.bind(this))
+	.on("zoomend", this.rescaleend.bind(this))
+	.on("zoomstart", this.rescalestart.bind(this));
+
     this.chart = d3.select(layout.container)
 	.append("svg")
 	.attr("width", this.layout.width)
 	.attr("height", this.layout.height)
-	.attr("class", "mainTracks");
+	.attr("class", "mainTracks")
+	.call(this.zoom);
 
     this.chart.append("defs").append("clipPath")
 	.attr("id", "trackClip_" + this.layout.name)
@@ -65,6 +72,7 @@ function genomeTrack(layout,tracks) {
     // Start with showing the entire genome
     this.visStart = 0;
     this.visEnd = layout.genomesize;
+    this.genomesize = layout.genomesize;
 
     this.axisContainer = this.chart.append("g")
 	.attr('class', 'trackAxis')
@@ -214,6 +222,23 @@ genomeTrack.prototype.update = function(startbp, endbp) {
 
     this.x1.domain([startbp,endbp]);
 
+    // Calculate the new zoom factor
+    this.zoom.scale(this.genomesize/(endbp-startbp));
+    this.zoom.translate([0-this.x(startbp), 0]);
+    console.log("updated scale " + this.zoom.scale());
+    //    console.log(this.zoom.translate());
+    //    console.log(this.x(startbp));
+    //    console.log("range " + this.x.range());
+    //    console.log("x1 range " + this.x1.range());
+    //    console.log("x1 domain " + this.x1.domain());
+
+    //    console.log(this.zoom.scale());
+
+    this.redraw();
+}
+
+genomeTrack.prototype.redraw = function() {
+
     for(var i = 0; i < this.tracks.length; i++) {
 
 	 if("undefined" !== this.tracks[i].skipLinear
@@ -234,5 +259,48 @@ genomeTrack.prototype.update = function(startbp, endbp) {
     }
     
     this.axisContainer.select(".x.axis.bottom").call(this.xAxis);
+
+}
+
+genomeTrack.prototype.rescale = function() {
+    trans=d3.event.translate,
+    tx = trans[0],
+    ty = trans[1];
+    scale = d3.event.scale;
+    window_size = Math.min(this.genomesize / scale, this.genomesize);
+    domain = this.x1.domain();
+    width = this.x(domain[1]) - this.x(domain[0]);
+    total_width = this.x1(domain[1]);
+    tx = Math.min(tx, 0);
+    console.log("width " + width);
+    overhang = Math.min(0, total_width - ((0 - tx) + width));
+    tx += overhang/2;
+    console.log("overhang? " + overhang);
+    //    tx + width
+    tx = Math.max(tx, 0 - (total_width - width));
+    this.zoom.translate([tx,ty]);
+
+    console.log("scale " + scale);
+    console.log("window " + window_size);
+
+    //    window_size = domain[1] - domain[0];
+    startbp = this.x.invert(0-tx);
+    endbp = startbp+window_size
+
+    //    console.log("domain " + domain);
+    console.log("tx " + tx);
+
+    //    this.update
+
+    console.log(startbp, startbp+window_size);
+
+    this.update(startbp, startbp+window_size);
+
+}
+
+genomeTrack.prototype.rescalestart = function() {
+}
+
+genomeTrack.prototype.rescaleend = function() {
 
 }
