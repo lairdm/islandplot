@@ -663,6 +663,9 @@ circularTrack.prototype.showBrush = function() {
     .style("visibility", "visible");
 }
 
+circularTrack.prototype.update = function(startBP, endBP) {
+    this.moveBrushbyBP(startBP, endBP);
+}
 
 ////////////////////////////////////////////////
 //

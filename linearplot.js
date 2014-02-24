@@ -44,10 +44,8 @@ function genomeTrack(layout,tracks) {
 	.range([0,(this.layout.height_without_axis-this.layout.bottom_margin)]);
 
     this.zoom = d3.behavior.zoom()
-	//	.x(this.x1)
+	.x(this.x1)
 	.on("zoom", this.rescale.bind(this))
-	.on("zoomend", this.rescaleend.bind(this))
-	.on("zoomstart", this.rescalestart.bind(this));
 
     this.chart = d3.select(layout.container)
 	.append("svg")
@@ -220,19 +218,7 @@ genomeTrack.prototype.update = function(startbp, endbp) {
     this.visStart = startbp;
     this.visEnd = endbp;
 
-    this.x1.domain([startbp,endbp]);
-
-    // Calculate the new zoom factor
-    this.zoom.scale(this.genomesize/(endbp-startbp));
-    this.zoom.translate([0-this.x(startbp), 0]);
-    console.log("updated scale " + this.zoom.scale());
-    //    console.log(this.zoom.translate());
-    //    console.log(this.x(startbp));
-    //    console.log("range " + this.x.range());
-    //    console.log("x1 range " + this.x1.range());
-    //    console.log("x1 domain " + this.x1.domain());
-
-    //    console.log(this.zoom.scale());
+    this.zoom.x(this.x1.domain([startbp,endbp]));
 
     this.redraw();
 }
@@ -263,44 +249,40 @@ genomeTrack.prototype.redraw = function() {
 }
 
 genomeTrack.prototype.rescale = function() {
-    trans=d3.event.translate,
-    tx = trans[0],
-    ty = trans[1];
-    scale = d3.event.scale;
-    window_size = Math.min(this.genomesize / scale, this.genomesize);
-    domain = this.x1.domain();
-    width = this.x(domain[1]) - this.x(domain[0]);
-    total_width = this.x1(domain[1]);
-    tx = Math.min(tx, 0);
-    console.log("width " + width);
-    overhang = Math.min(0, total_width - ((0 - tx) + width));
-    tx += overhang/2;
-    console.log("overhang? " + overhang);
-    //    tx + width
-    tx = Math.max(tx, 0 - (total_width - width));
-    this.zoom.translate([tx,ty]);
 
-    console.log("scale " + scale);
-    console.log("window " + window_size);
+    var reset_s = 0;
+    if ((this.x1.domain()[1] - this.x1.domain()[0]) >= (this.genomesize - 0)) {
+	this.zoom.x(this.x1.domain([0, this.genomesize]));
+	reset_s = 1;
+    }
 
-    //    window_size = domain[1] - domain[0];
-    startbp = this.x.invert(0-tx);
-    endbp = startbp+window_size
+    if (reset_s == 1) { // Both axes are full resolution. Reset.
+	this.zoom.scale(1);
+	this.zoom.translate([0,0]);
+    }
+    else {
+	if (this.x1.domain()[0] < 0) {
+	    this.x1.domain([0, this.x1.domain()[1] - this.x1.domain()[0] + 0]);
+	}
+	if (this.x1.domain()[1] > this.genomesize) {
+	    var xdom0 = this.x1.domain()[0] - this.x1.domain()[1] + this.genomesize;
+	    this.x1.domain([xdom0, this.genomesize]);
+	}
+    }
 
-    //    console.log("domain " + domain);
-    console.log("tx " + tx);
+    var cur_domain = this.x1.domain();
+    this.visStart = cur_domain[0];
+    this.visEnd = cur_domain[1];
 
-    //    this.update
+    if('undefined' !== typeof this.callbackObj) {
+	this.callbackObj.update(this.x1.domain()[0], this.x1.domain()[1]);
+    }
 
-    console.log(startbp, startbp+window_size);
-
-    this.update(startbp, startbp+window_size);
+    this.redraw();
 
 }
 
-genomeTrack.prototype.rescalestart = function() {
+genomeTrack.prototype.addBrushCallback = function(obj) {
+    this.callbackObj = obj;
 }
 
-genomeTrack.prototype.rescaleend = function() {
-
-}

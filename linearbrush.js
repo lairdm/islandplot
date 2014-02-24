@@ -22,13 +22,15 @@ function linearBrush(layout, callbackObj) {
 	.attr("height", contextHeight)
 	.attr("class", "miniBrush");
 
-    var brush = d3.svg.brush()
+    this.brush = d3.svg.brush()
 	.x(this.x1)
-	.on("brush", brushUpdate);
+	.on("brush", this.brushUpdate.bind(this));
 
-    this.mini.append("g")
+    //    this.brush = brush;
+
+    this.brushContainer = this.mini.append("g")
 	.attr("class", "track brush")
-	.call(brush)
+	.call(this.brush.bind(this))
 	.selectAll("rect")
 	.attr("y", 1)
 	.attr("height", contextHeight - 1);
@@ -45,13 +47,18 @@ function linearBrush(layout, callbackObj) {
     .attr("transform", "translate(0," + 0 + ")")
     .call(this.xAxis);
 
+}
 
+linearBrush.prototype.brushUpdate = function(b) {
+    var minExtent = this.brush.extent()[0];
+    var maxExtent = this.brush.extent()[1];
+    this.callbackObj.update(minExtent, maxExtent);
+}
 
-    function brushUpdate(b) {
-	var minExtent = brush.extent()[0];
-	var maxExtent = brush.extent()[1];
-	//	console.log(minExtent, maxExtent);
-	callbackObj.update(minExtent, maxExtent);
-    }
+linearBrush.prototype.update = function(startBP, endBP) {
+
+	this.brush.extent([startBP, endBP]);
+	
+	d3.selectAll('.brush').call(this.brush);
 
 }

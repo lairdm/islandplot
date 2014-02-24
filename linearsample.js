@@ -7,3 +7,4 @@ var contextLayout = {genomesize: 6264404,
 var linearTrack = new genomeTrack(linearlayout, tracks);
 var brush = new linearBrush(contextLayout,linearTrack);
 
+linearTrack.addBrushCallback(brush);
