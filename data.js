@@ -7,13 +7,15 @@ var tracks = [
 		mouseclick: 'islandPopup',
 		mouseover_callback: 'islandPopup',
 		mouseout_callback: 'islandPopupClear',
+		linear_mouseclick: 'linearPopup',
+		showLabels: true,
 		items: [
                          {id: 1, start:0, end:30000, name:"island0", strand: -1},
                          {id: 2, start:60000,end:100000, name:"island1", strand: -1},
-                         {id: 3, start:800000,end:1000000, name:"island2", strand: 1},
+                         {id: 3, start:800000,end:1000000, name:"island2withavery long name", strand: 1},
                          {id: 4, start:1200000,end:1500000, name:"island3", strand: 1},
-                         {id: 4, start:1500000,end:1700000, name:"island4",strand: -1},
-                         {id:5, start:2000000,end:2100000, name:"island5", strand: 1}
+                         {id: 5, start:1500000,end:1700000, name:"island4",strand: -1},
+                         {id:6, start:2000000,end:2100000, name:"is", strand: 1}
 			]
 	      },
 	      { trackName: "track2",
@@ -22,6 +24,8 @@ var tracks = [
 		inner_radius: 215,
 		outer_radius: 265,
 		centre_line_stroke: "grey",
+		showLabels: true,
+
 		items: [
 {id: 1, start:483, end:2027, name:"PA0001", strand:1},
 {id: 2, start:2056, end:3159, name:"PA0002", strand:1},
@@ -5603,6 +5607,7 @@ var tracks = [
 		min_slice: true,
 		inner_radius: 180,
 		outer_radius: 205,
+		showLabels: true,
 		items: [
 {id: 1, start:289562, end:293798, name:"PA0259"},
 {id: 2, start:289562, end:293798, name:"PA0260"},

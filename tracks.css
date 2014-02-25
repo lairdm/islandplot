@@ -12,36 +12,61 @@
 
 .track1_pos {
     fill: darksalmon;
-    stroke-width: 6;	
+    stroke: #d1876d;
+    stroke-opacity: 0.8;
+    stroke-width: 1;	
 }
 
 .track1_neg {
     fill: darkolivegreen;
     fill-opacity: .7;
-    stroke-width: 6;	
+    stroke-width: 1;
+    stroke: #4c602a;
 }
 
 .track1_pos:hover {
     fill: red;
-    stroke-width: 6;	
+    stroke-width: 1;
+    stroke: 1;
 }
 
 .track1_neg:hover {
     fill: red;
     fill-opacity: .9;
-    stroke-width: 6;	
+    stroke-width: 1;
+    stroke: red;
 }
 
+.track1_text {
+    fill: white;
+    font-weight: bold;
+    font: 12px arial;
+}
 .track2_pos {
     fill: slategray;
     fill-opacity: .7;
-    stroke-width: 6;	
+}
+
+.track2_pos_zoomed {
+    stroke-width: 1px;
+    stroke: #647381;
 }
 
 .track2_neg {
     fill: green;
     fill-opacity: .7;
-    stroke-width: 6;	
+}
+
+.track2_neg_zoomed {
+    stroke-width: 1px;
+    stroke: #007300;
+    stroke-opacity: 0.7;
+}
+
+.track2_text {
+    fill: white;
+    font-weight: bold;
+    font: 12px arial;
 }
 
 .track3 {
@@ -54,6 +79,12 @@
     fill: blue;
     fill-opacity: .9;
     stroke-width: 6;
+}
+
+.track3_text {
+    fill: white;
+    font-weight: bold;
+    font: 12px arial;
 }
 
 .track4 {
@@ -96,4 +127,8 @@
 
 .brushStart {
     fill: "green";
+}
+
+.linear_hidden {
+	visibility: hidden;
 }
