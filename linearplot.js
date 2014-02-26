@@ -6,7 +6,7 @@ var linearTrackDefaults = {
     bottom_margin: 5,
     axis_height: 50,
     name: "defaultlinear",
-}
+};
 
 function genomeTrack(layout,tracks) {
 
@@ -45,7 +45,7 @@ function genomeTrack(layout,tracks) {
 
     this.zoom = d3.behavior.zoom()
 	.x(this.x1)
-	.on("zoom", this.rescale.bind(this))
+	.on("zoom", this.rescale.bind(this));
 
     this.chart = d3.select(layout.container)
 	.append("svg")
@@ -72,6 +72,15 @@ function genomeTrack(layout,tracks) {
     this.visStart = 0;
     this.visEnd = layout.genomesize;
     this.genomesize = layout.genomesize;
+
+    this.tip = d3.tip()
+	.attr('class', 'd3-tip')
+	.offset([-10, 0])
+	.html(function(d) {
+		return "<strong>Name:</strong> <span style='color:red'>" + d.name + "</span>";
+	    });
+    
+    this.chart.call(this.tip);
 
     this.axisContainer = this.chart.append("g")
 	.attr('class', 'trackAxis')
@@ -157,7 +166,16 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
-    var stackNum = this.tracks[i].stackNum
+
+    // Because of how the tooltip library binds to the SVG object we have to turn it
+    // on or off here rather than in the .on() call, we'll redirect the calls to
+    // a dummy do-nothing object if we're not showing tips in this context.
+    var tip = {show: function() {}, hide: function() {} };
+    if(('undefined' !== typeof track.showTooltip) && typeof track.showTooltip) {
+	tip = this.tip;
+    }
+
+    var stackNum = this.tracks[i].stackNum;
     //    console.log(visStart, visEnd);
     var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
 
@@ -191,17 +209,11 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' +  (y1((d.strand == -1 ? stackNum : stackNum-1)) + 10) + ")"; })
     .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + '_group'; });
 	    
-    //    var entering_rects = rects.enter().append("rect")
     entering_rects.append("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '' );})
-    //    .attr("x", function(d) {return x1(d.start);})
-    //    .attr("y", function(d) {return y1((d.strand == -1 ? stackNum : stackNum-1)) + 10})
-    //old bad one    .attr("y", function(d) {return y1(i) + 10 + (d.strand == -1 ? y1(1)/2: (.2 * y1(1)/2))})
     .attr("width", function(d) {return d.width;})
     .attr("height", function(d) {return .8 * y1(1);})
-    //    .attr("height", function(d) {return .8 * y1(1)/2;})
-    //    .attr("clip-path", "url(#trackClip_" + this.layout.name + ")")
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
@@ -209,9 +221,11 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    } else {
 		null;
 	    }
-	});
+	})
+    .on('mouseover', tip.show )
+    .on('mouseout', tip.hide);
 
-    if('undefined' !== typeof track.showLabels) {
+    if(('undefined' !== typeof track.showLabels) && typeof track.showLabels) {
 	entering_rects.append("text")
 	    .text(function(d) {return d.name;})
 	    .attr("dx", "2px")
@@ -236,7 +250,15 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
-    var stackNum = this.tracks[i].stackNum
+    // Because of how the tooltip library binds to the SVG object we have to turn it
+    // on or off here rather than in the .on() call, we'll redirect the calls to
+    // a dummy do-nothing object if we're not showing tips in this context.
+    var tip = {show: function() {}, hide: function() {} };
+    if(('undefined' !== typeof track.showTooltip) && typeof track.showTooltip) {
+	tip = this.tip;
+    }
+
+    var stackNum = this.tracks[i].stackNum;
     //    console.log(visStart, visEnd);
     var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
 
@@ -251,7 +273,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width; })
-    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' );})
+    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' );});
 
     rects.selectAll("text")
     .attr("dx", "2px")
@@ -274,11 +296,8 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     entering_rects.append("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' );})
-    //    .attr("x", function(d) {return x1(d.start);})
-    //    .attr("y", function(d) {return y1(stackNum) + 10})
     .attr("width", function(d) {return d.width; })
     .attr("height", function(d) {return .8 * y1(1);})
-    //    .attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
@@ -286,7 +305,9 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    } else {
 		null;
 	    }
-	});
+	})
+    .on('mouseover', tip.show )
+    .on('mouseout', tip.hide);
 
     if('undefined' !== typeof track.showLabels) {
 	entering_rects.append("text")
