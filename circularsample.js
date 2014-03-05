@@ -46,4 +46,8 @@ function islandPopupClear(d) {
 }
 
 var cTrack = new circularTrack(circularlayout, tracks);
-cTrack.attachBrush(linearTrack);
+if('undefined' !== typeof brush) {
+    console.log("Attaching linear track brush");
+    cTrack.attachBrush(brush);
+    cTrack.showBrush();
+}

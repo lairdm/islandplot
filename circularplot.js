@@ -41,7 +41,8 @@ function circularTrack(layout,tracks) {
     d3.select(layout.container).select("svg").remove();
 
     this.g = d3.select(layout.container)
-	.append("svg")
+	.append("svg")	
+	.attr("id", function() { return layout.container.slice(1) + "_svg"; })
 	.attr("width", this.layout.w+this.layout.ExtraWidthX)
 	.attr("height", this.layout.h+this.layout.ExtraWidthY)
 	.append("g")
@@ -316,7 +317,12 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.mouseclick) {
 		var fn = window[track.mouseclick];
-		return fn(d);
+		if('object' ==  typeof fn) {
+		    return fn.onclick(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+
 	    } else {
 		null;
 	    }
@@ -324,7 +330,12 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .on("mouseover", function(d, i) {
 	    if('undefined' !== typeof track.mouseover_callback) {
 		var fn = window[track.mouseover_callback];
-		return fn(d);
+		if('object' ==  typeof fn) {
+		    return fn.mouseover(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+
 	    } else {
 		return null;
 	    }
@@ -332,7 +343,12 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .on("mouseout", function(d, i) {
     	    if('undefined' !== typeof track.mouseover_callback) {
 		var fn = window[track.mouseout_callback];
-		return fn(d);
+		if('object' ==  typeof fn) {
+		    return fn.mouseout(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+
     	    } else {
 		return null;
 	    }
@@ -504,12 +520,26 @@ circularTrack.prototype.updateGlyphTrack = function(i) {
 ////////////////////////////////////////////////
 
 circularTrack.prototype.attachBrush = function(callbackObj) {
+    if('undefined' !== typeof this.callbackObj) {
+
+	if( Object.prototype.toString.call( callbackObj ) === '[object Array]' ) { 
+	    this.callbackObj.push(callbackObj);
+	} else {
+	    var tmpobj = this.callbackObj;
+	    this.callbackObj = [tmpobj, callbackObj];
+	}
+    } else {
+	this.callbackObj = callbackObj;
+	this.createBrush();
+    }
+
+}
+
+circularTrack.prototype.createBrush = function() {
     var g = this.g;
     var cfg = this.layout;
     var xScale = this.xScale;
     var self = this;
-
-    this.brushCallbackObj = callbackObj;
 
     this.brushStart = 0;
     this.brushEnd = 0;
@@ -549,9 +579,13 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 	    self.brushStart = curRadandBP[0];
 	    self.brushStartBP = curRadandBP[1];
 	    self.moveBrush(self.brushStart, self.brushEnd);
-	    if('undefined' !== typeof self.brushCallbackObj) {
-		self.brushCallbackObj.update(self.brushStartBP, self.brushEndBP);
+	    if('undefined' !== typeof self.callbackObj) {
+		self.doBrushCallback(self.brushStartBP, self.brushEndBP);
+		//		self.callbackObj.update(self.brushStartBP, self.brushEndBP);
 	    }
+	})
+    .on("dragend", function(d) {
+	    self.doBrushFinishedCallback(self.brushStartBP, self.brushEndBP);
 	});
 
     var dragEnd = d3.behavior.drag()
@@ -575,9 +609,13 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 	    self.brushEnd = curRadandBP[0];
 	    self.brushEndBP = curRadandBP[1];
 	    self.moveBrush(self.brushStart, self.brushEnd);
-	    if('undefined' !== typeof self.brushCallbackObj) {
-		self.brushCallbackObj.update(self.brushStartBP, self.brushEndBP);
+	    if('undefined' !== typeof self.callbackObj) {
+		self.doBrushCallback(self.brushStartBP, self.brushEndBP);
+		//		self.callbackObj.update(self.brushStartBP, self.brushEndBP);
 	    }
+	})
+    .on("dragend", function(d) {
+	    self.doBrushFinishedCallback(self.brushStartBP, self.brushEndBP);
 	});
 
     this.endBrushObj = g.append("circle")
@@ -601,6 +639,32 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
     .call(dragStart);
 
     // Create the start and stop pointers
+
+}
+
+circularTrack.prototype.doBrushCallback = function(startBP, endBP) {
+    if( Object.prototype.toString.call( this.callbackObj ) === '[object Array]' ) { 
+	for(var obj in this.callbackObj) {
+	    if(this.callbackObj.hasOwnProperty(obj)) {
+		this.callbackObj[obj].update(startBP, endBP);
+	    }
+	}
+    } else {
+	this.callbackObj.update(startBP, endBP);
+    }
+
+}
+
+circularTrack.prototype.doBrushFinishedCallback = function(startBP, endBP) {
+    if( Object.prototype.toString.call( this.callbackObj ) === '[object Array]' ) { 
+	for(var obj in this.callbackObj) {
+	    if(this.callbackObj.hasOwnProperty(obj)) {
+		this.callbackObj[obj].update_finished(startBP, endBP);
+	    }
+	}
+    } else {
+	this.callbackObj.update_finished(startBP, endBP);
+    }
 
 }
 
@@ -665,6 +729,10 @@ circularTrack.prototype.showBrush = function() {
 
 circularTrack.prototype.update = function(startBP, endBP) {
     this.moveBrushbyBP(startBP, endBP);
+}
+
+circularTrack.prototype.update_finished = function(startBP, endBP) {
+    console.log("Thank you, got: " + startBP, endBP);
 }
 
 ////////////////////////////////////////////////
