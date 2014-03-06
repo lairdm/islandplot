@@ -59,7 +59,8 @@ function genomeTrack(layout,tracks) {
     this.chart.append("defs").append("clipPath")
 	.attr("id", "trackClip_" + this.layout.name)
 	.append("rect")
-	.attr("width", this.layout.width_without_margins + this.layout.right_margin)
+	.attr("width", this.layout.width_without_margins)
+	//	.attr("width", this.layout.width_without_margins + this.layout.right_margin)
 	.attr("height", this.layout.height)
 	.attr("transform", "translate(0,0)");
     //	.attr("transform", "translate(" + this.layout.left_margin + ",0)");
@@ -87,13 +88,15 @@ function genomeTrack(layout,tracks) {
     this.axisContainer = this.chart.append("g")
 	.attr('class', 'trackAxis')
 	.attr('width', this.layout.width_without_margins)
-	.attr("transform", "translate(" + (this.layout.left_margin + 15) + "," + this.layout.height_without_axis + ")");
+	.attr("transform", "translate(" + (this.layout.left_margin + 5) + "," + this.layout.height_without_axis + ")");
 
     this.xAxis = d3.svg.axis().scale(this.x1).orient("bottom")
+	.innerTickSize(-this.layout.height)
+	.outerTickSize(0)
 	.tickFormat(d3.format("s"));
 
     this.axisContainer.append("g")
-	.attr("class", "x axis bottom")
+	.attr("class", "xaxislinear")
 	.attr('width', this.layout.width_without_margins)
 
 	.attr("transform", "translate(0," + 10 + ")")
@@ -121,7 +124,7 @@ function genomeTrack(layout,tracks) {
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
-		.attr("clip-path", "url(#clipPath_" + this.layout.name + ")");
+		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
 	    this.displayTrack(this.tracks[i], i);
 	    break;
 	default:
@@ -228,8 +231,28 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 		null;
 	    }
 	})
-    .on('mouseover', tip.show )
-    .on('mouseout', tip.hide);
+    .on('mouseover', function(d) { 
+	    tip.show(d);
+	    if('undefined' !== typeof track.linear_mouseover) {
+		var fn = window[track.linear_mouseover];
+		if('object' ==  typeof fn) {
+		    return fn.mouseover(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    }	
+	})
+    .on('mouseout', function(d) { 
+	    tip.hide(d);
+	    if('undefined' !== typeof track.linear_mouseout) {
+		var fn = window[track.linear_mouseout];
+		if('object' ==  typeof fn) {
+		    return fn.mouseout(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    }	
+	});
 
     if(('undefined' !== typeof track.showLabels) && typeof track.showLabels) {
 	entering_rects.append("text")
@@ -316,8 +339,28 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 		null;
 	    }
 	})
-    .on('mouseover', tip.show )
-    .on('mouseout', tip.hide);
+    .on('mouseover', function(d) { 
+	    tip.show(d);
+	    if('undefined' !== typeof track.linear_mouseover) {
+		var fn = window[track.linear_mouseover];
+		if('object' ==  typeof fn) {
+		    return fn.mouseover(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    }	
+	})
+    .on('mouseout', function(d) { 
+	    tip.hide(d);
+	    if('undefined' !== typeof track.linear_mouseout) {
+		var fn = window[track.linear_mouseout];
+		if('object' ==  typeof fn) {
+		    return fn.mouseout(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    }	
+	});
 
     if('undefined' !== typeof track.showLabels) {
 	entering_rects.append("text")
@@ -341,7 +384,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 }
 
 genomeTrack.prototype.displayAxis = function() {
-    this.axisContainer.select(".x.axis.bottom").call(this.xAxis);
+    this.axisContainer.select(".xaxislinear").call(this.xAxis);
 }
 
 genomeTrack.prototype.update = function(startbp, endbp) {
@@ -356,7 +399,7 @@ genomeTrack.prototype.update = function(startbp, endbp) {
 }
 
 genomeTrack.prototype.update_finished = function(startbp, endbp) {
-    console.log("Thank you, got: " + startbp, endbp);
+    //    console.log("Thank you, got: " + startbp, endbp);
 
 }
 
@@ -381,7 +424,7 @@ genomeTrack.prototype.redraw = function() {
 	}
     }
     
-    this.axisContainer.select(".x.axis.bottom").call(this.xAxis);
+    this.axisContainer.select(".xaxislinear").call(this.xAxis);
 
 }
 

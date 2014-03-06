@@ -732,7 +732,7 @@ circularTrack.prototype.update = function(startBP, endBP) {
 }
 
 circularTrack.prototype.update_finished = function(startBP, endBP) {
-    console.log("Thank you, got: " + startBP, endBP);
+    //    console.log("Thank you, got: " + startBP, endBP);
 }
 
 ////////////////////////////////////////////////
