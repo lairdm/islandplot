@@ -488,11 +488,12 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
     .attr('class', function(d) {return track.trackName + '_' + d.type})
     .attr("d", d3.svg.symbol().type(track.glyphType).size(track.glyphSize))
-    .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
-				       + y(d,i) + ")" })
+    .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
     .style("opacity", 0)
     .transition()
     .duration(1000)
+    .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
+				       + y(d,i) + ")" })
     .style("opacity", 1)
 
     trackPath.exit()
