@@ -6091,8 +6091,12 @@ var tracks = [
 		glyphType: 'circle',
 		radius: 75,
 		pixel_spacing: 8,
+		linear_pixel_spacing: 8,
 	        glyph_buffer: 8,
+	        linear_glyph_buffer: 8,
 		glyphSize: 20,
+		linear_glyphSize: 20,
+		linear_height: 100,
 		items: [
 			{id: 1, bp: 100, type: 'vfdb'},
 			{id: 2, bp: 50000, type: 'adb'},
@@ -6101,7 +6105,12 @@ var tracks = [
 			{id: 5, bp: 53000, type: 'adb'},
 			{id: 6, bp: 54000, type: 'vfdb'},
 			{id: 7, bp: 55000, type: 'adb'},
-			{id: 8, bp: 56000, type: 'adb'}
+			{id: 8, bp: 56000, type: 'adb'},
+			{id: 9, bp: 156000, type: 'adb'},
+			{id: 10, bp: 256000, type: 'adb'},
+			{id: 11, bp: 3560000, type: 'adb'},
+			{id: 12, bp: 3560005, type: 'adb'}
+
 	           ]
 		      }
       ];

@@ -127,6 +127,23 @@ function genomeTrack(layout,tracks) {
 		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
 	    this.displayTrack(this.tracks[i], i);
 	    break;
+	case "glyph":
+	    if(typeof this.tracks[i].linear_invert !== 'undefined' && this.tracks[i].linear_invert == true) {
+		this.tracks[i].invert = -1;
+	    } else {
+		this.tracks[i].invert = 1;
+	    }
+	    if(typeof this.tracks[i].linear_padding !== 'undefined') {
+		this.tracks[i].padding = this.tracks[i].linear_padding;
+	    } else {
+		this.tracks[i].padding = 0;
+	    }
+	    this.itemRects[i] = this.main.append("g")
+		.attr("class", this.tracks[i].trackName)
+		.attr("width", this.layout.width_without_margins)
+		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+	    this.displayGlyphTrack(this.tracks[i], i);
+	    break;
 	default:
 	    // Do nothing for an unknown track type
 	}
@@ -198,7 +215,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 
     rects.selectAll("text")
     .attr("dx", "2px")
-    .attr("dy", "1em")
+    .attr("dy", "0.94em")
     .each(function (d) {
 	    var bb = this.getBBox();
 	    var slice_length = x1(d.end) - x1(d.start) - 2; // -2 to offset the dx above
@@ -218,7 +235,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '' );})
     .attr("width", function(d) {return d.width;})
-    .attr("height", function(d) {return .8 * y1(1);})
+    .attr("height", function(d) {return .9 * y1(1);})
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
@@ -383,6 +400,100 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     rects.exit().remove();
 }
 
+genomeTrack.prototype.displayGlyphTrack = function(track, i) {
+    var visStart = this.visStart,
+    visEnd = this.visEnd,
+    x1 = this.x1,
+    y1 = this.y1;
+
+    if((typeof track.visible !== 'undefined') && (track.visible != false)) {
+    	return;
+    }
+
+    // Because of how the tooltip library binds to the SVG object we have to turn it
+    // on or off here rather than in the .on() call, we'll redirect the calls to
+    // a dummy do-nothing object if we're not showing tips in this context.
+    var tip = {show: function() {}, hide: function() {} };
+    if(('undefined' !== typeof track.showTooltip) && typeof track.showTooltip) {
+	tip = this.tip;
+    }
+
+    var items = track.items.filter(function(d) {return d.bp <= visEnd && d.bp >= visStart;});
+
+    // When we move we need to recalculate the stacking order
+    var stackCount = 0;
+    for(var j = 0; j < items.length; j++) {
+	if(items[j].bp < visStart || items[j].bp > visEnd) {
+	    continue;
+	}
+	if(j < 1) {
+	    items[j].stackCount = 0;
+	    continue;
+	}
+
+	var dist = x1(items[j].bp) - x1(items[j-1].bp);
+
+	if(dist < track.linear_pixel_spacing) {
+	    items[j].stackCount = items[j-1].stackCount + 1;
+	    continue;
+	}
+
+	items[j].stackCount = 0;
+    }
+
+    // Because SVG coordinates are from the top-left, the "height" is pixels DOWN from
+    // the top of the image to start stacking the glyphs
+
+    var glyphs = this.itemRects[i].selectAll("path")
+    .data(items, function(d) { return d.id; })
+    .attr("transform", function(d,i) { return "translate(" + (x1(d.bp) + track.padding) + ',' + (track.linear_height - (track.linear_glyph_buffer * d.stackCount * track.invert))  + ")"; });
+   
+    var entering_glyphs = glyphs.enter()
+    .append('path')
+    .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
+    .attr('class', function(d) {return track.trackName + '_' + d.type})
+    .attr("d", d3.svg.symbol().type(track.glyphType).size(track.linear_glyphSize))
+    .attr("transform", function(d,i) {  return "translate(" + (x1(d.bp) + track.padding) + ',' + (track.linear_height - (track.linear_glyph_buffer * d.stackCount * track.invert))  + ")"; })
+    .on("click", function(d,i) {
+	    if('undefined' !== typeof track.linear_mouseclick) {
+		var fn = window[track.linear_mouseclick];
+		if('object' ==  typeof fn) {
+		    return fn.onclick(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    } else {
+		null;
+	    }
+	})
+    .on('mouseover', function(d) { 
+	    tip.show(d);
+	    if('undefined' !== typeof track.linear_mouseover) {
+		var fn = window[track.linear_mouseover];
+		if('object' ==  typeof fn) {
+		    return fn.mouseover(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    }	
+	})
+    .on('mouseout', function(d) { 
+	    tip.hide(d);
+	    if('undefined' !== typeof track.linear_mouseout) {
+		var fn = window[track.linear_mouseout];
+		if('object' ==  typeof fn) {
+		    return fn.mouseout(track.trackName, d);
+		} else if('function' == typeof fn) {
+		    return fn(d);
+		}
+	    }	
+	});
+
+    glyphs.exit()
+    .remove();
+    
+}
+
 genomeTrack.prototype.displayAxis = function() {
     this.axisContainer.select(".xaxislinear").call(this.xAxis);
 }
@@ -418,6 +529,9 @@ genomeTrack.prototype.redraw = function() {
 	    break;
 	case "track":
 	    this.displayTrack(this.tracks[i], i);
+	    break;
+	case "glyph":
+	this.displayGlyphTrack(this.tracks[i], i);
 	    break;
 	default:
 	    // Do nothing for an unknown track type
