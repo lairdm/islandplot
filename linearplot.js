@@ -144,6 +144,19 @@ function genomeTrack(layout,tracks) {
 		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
 	    this.displayGlyphTrack(this.tracks[i], i);
 	    break;
+	case "plot":
+	    this.tracks[i].g = this.itemRects[i] = this.main.append("g")
+		.attr("class", this.tracks[i].trackName)
+		.attr("width", this.layout.width_without_margins)
+		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+	    this.tracks[i].g.append("path")
+		.attr("class", this.tracks[i].trackName)
+		.attr("id", this.tracks[i].trackName)
+		.attr("stroke-width", 1)
+		.attr("fill", "none");
+
+	    this.displayPlotTrack(this.tracks[i], i);
+	    break;
 	default:
 	    // Do nothing for an unknown track type
 	}
@@ -400,6 +413,43 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     rects.exit().remove();
 }
 
+genomeTrack.prototype.displayPlotTrack = function(track, i) {
+    var visStart = this.visStart,
+    visEnd = this.visEnd,
+    x1 = this.x1,
+    y1 = this.y1;
+
+    if((typeof track.visible == 'undefined') || (track.visible == false)) {
+    	return;
+    }
+
+    if((typeof track.linear_plot_width == 'undefined') || (typeof track.linear_plot_height == 'undefined')) {
+//    if((typeof track.linear_plot_width == 'undefined')) {
+	return;
+    }
+
+    var startItem = parseInt(visStart / track.bp_per_element);
+    var endItem = Math.min(parseInt(visEnd / track.bp_per_element), track.items.length);
+    var offset = ((startItem+1) * track.bp_per_element) - visStart;
+
+    var items = track.items.filter(function(d, i) { return i >= startItem && i <= endItem } );
+
+    track.plotScale = d3.scale.linear()
+	.domain([track.plot_min, track.plot_max])
+	.range([track.linear_plot_height+(track.linear_plot_width/2), track.linear_plot_height-(track.linear_plot_width/2)]);
+
+    var lineFunction = d3.svg.line()
+	.x(function(d, i) { return x1((i*track.bp_per_element)); } )
+	.y(function(d, i) { return track.plotScale(d); } )
+	.interpolate("linear");
+
+     var plot = this.itemRects[i].selectAll("path")
+	.attr("d", lineFunction(track.items))
+
+//    plot.exit().remove();
+
+}
+
 genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     var visStart = this.visStart,
     visEnd = this.visEnd,
@@ -451,7 +501,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     var entering_glyphs = glyphs.enter()
     .append('path')
     .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
-    .attr('class', function(d) {return track.trackName + '_' + d.type})
+    .attr('class', function(d) {return track.trackName + '_' + d.type + " linear_" + track.trackName + '_' + d.type; })
     .attr("d", d3.svg.symbol().type(track.glyphType).size(track.linear_glyphSize))
     .attr("transform", function(d,i) {  return "translate(" + (x1(d.bp) + track.padding) + ',' + (track.linear_height - (track.linear_glyph_buffer * d.stackCount * track.invert))  + ")"; })
     .on("click", function(d,i) {
@@ -531,7 +581,10 @@ genomeTrack.prototype.redraw = function() {
 	    this.displayTrack(this.tracks[i], i);
 	    break;
 	case "glyph":
-	this.displayGlyphTrack(this.tracks[i], i);
+	    this.displayGlyphTrack(this.tracks[i], i);
+	    break;
+	case "plot":
+	    this.displayPlotTrack(this.tracks[i], i);
 	    break;
 	default:
 	    // Do nothing for an unknown track type

@@ -19,7 +19,7 @@ Available track types
 
 * block track (simply start and end basepairs for each element)
 * stranded track (allowing visualizing of the forward or reverse strand)
-* plot track (for visualizing things such as average GC content, circular plot only)
+* plot track (for visualizing things such as average GC content)
 * glyph track (for visualizing specific features at a given point)
 
 Data format
@@ -173,6 +173,8 @@ Plot configuration options
 		bp_per_element: 10000,
 	        plot_width: 50,
 		plot_radius: 100,
+	        linear_plot_width: 50,
+		linear_plot_height: 100,
 		items: [
                         ...
                        ]
@@ -185,8 +187,11 @@ plot_mean: The mean value of the set of elements, if omited a mean value line is
 
 bp_per_element: The number of bp between each element in the items list, number of items * bp_per_element should equal the genome size
 
-plot_with: Number of px between the inner and outer radius of the plot
+plot_witdh: Number of px between the inner and outer radius of the plot
 plot_radius: The radius of the plot, the plot will extend plot_width/2 in either direction
+
+linear_plot_width: Number of px between the top and bottom of a the plot on a linear plot
+linear_plot_height: The number of pixels from the top of a linear plot for the centre of a plot, the plot will extend plot_width/2 in either direction
 
 Glyph configuration options
 ===========================
