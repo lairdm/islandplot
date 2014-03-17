@@ -460,14 +460,6 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     	return;
     }
 
-    // Because of how the tooltip library binds to the SVG object we have to turn it
-    // on or off here rather than in the .on() call, we'll redirect the calls to
-    // a dummy do-nothing object if we're not showing tips in this context.
-    var tip = {show: function() {}, hide: function() {} };
-    if(('undefined' !== typeof track.showTooltip) && typeof track.showTooltip) {
-	tip = this.tip;
-    }
-
     var items = track.items.filter(function(d) {return d.bp <= visEnd && d.bp >= visStart;});
 
     // When we move we need to recalculate the stacking order
@@ -517,7 +509,6 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    }
 	})
     .on('mouseover', function(d) { 
-	    tip.show(d);
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
@@ -528,7 +519,6 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    }	
 	})
     .on('mouseout', function(d) { 
-	    tip.hide(d);
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {

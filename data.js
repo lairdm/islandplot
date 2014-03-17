@@ -6099,6 +6099,7 @@ var tracks = [
 		glyphSize: 20,
 		linear_glyphSize: 20,
 		linear_height: 100,
+		linear_mouseclick: 'linearPopup',
 		items: [
 			{id: 1, bp: 100, type: 'vfdb'},
 			{id: 2, bp: 50000, type: 'adb'},
