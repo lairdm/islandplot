@@ -62,3 +62,7 @@ linearBrush.prototype.update = function(startBP, endBP) {
 	d3.selectAll('.brush').call(this.brush);
 
 }
+
+linearBrush.prototype.update_finished = function(startBP, endBP) {
+
+}
