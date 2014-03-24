@@ -75,11 +75,12 @@ function genomeTrack(layout,tracks) {
     // Resize dragger
     if(this.layout.dragresize == true) {
 	var dragright = d3.behavior.drag()
+	    .on("dragstart", function() {  d3.event.sourceEvent.stopPropagation(); })
 	    .on("drag", this.dragresize.bind(this));
 
 	this.dragbar_y_mid = this.layout.height/2;
-	this.dragbar = this.main.append("g")
-	    .attr("transform", "translate(" + this.layout.width_without_margins + "," + (this.dragbar_y_mid-10) + ")")
+	this.dragbar = this.chart.append("g")
+	    .attr("transform", "translate(" + (this.layout.width-this.layout.right_margin) + "," + (this.dragbar_y_mid-10) + ")")
 	    .attr("width", 25)
 	    .attr("height", 20)
 	    .attr("fill", "lightblue")
@@ -598,9 +599,6 @@ genomeTrack.prototype.resize = function(newWidth) {
 	this.layout.width - this.layout.left_margin -
 	this.layout.right_margin;
 
-    console.log("new width: " + this.layout.width);
-    console.log("new width_without_margins: " + this.layout.width_without_margins);
-
     this.x
 	.range([0,this.layout.width_without_margins]);
     this.x1
@@ -609,7 +607,6 @@ genomeTrack.prototype.resize = function(newWidth) {
     this.chart
 	.attr("width", this.layout.width)
 
-    console.log(this.clipPath);
     this.clipPath
 	.attr("width", this.layout.width_without_margins)
     
@@ -623,10 +620,11 @@ genomeTrack.prototype.resize = function(newWidth) {
 genomeTrack.prototype.dragresize = function(d) {
     var newWidth = d3.event.x;
     this.dragbar
-    .attr("transform", "translate(" + (newWidth- this.layout.left_margin -
+    .attr("transform", "translate(" + (newWidth -
 				       this.layout.right_margin) + "," + (this.dragbar_y_mid-15) + ")")
 
     this.resize(newWidth);
+    //    d3.event.preventDefault();
 
 }
 
