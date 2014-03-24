@@ -56,7 +56,7 @@ function genomeTrack(layout,tracks) {
 	.attr("class", "mainTracks")
 	.call(this.zoom);
 
-    this.chart.append("defs").append("clipPath")
+    this.clipPath = this.chart.append("defs").append("clipPath")
 	.attr("id", "trackClip_" + this.layout.name)
 	.append("rect")
 	.attr("width", this.layout.width_without_margins)
@@ -70,6 +70,44 @@ function genomeTrack(layout,tracks) {
 	.attr("width", this.layout.width_without_margins)
 	.attr("height", this.layout.height)
 	.attr("class", "mainTrack");
+
+    // Resize dragger
+
+    var dragright = d3.behavior.drag()
+	//	.origin(function(d) { return d; })
+	//	.origin(Object)
+	.on("drag", this.dragresize.bind(this));
+
+    this.dragbar_y_mid = this.layout.height/2;
+    this.dragbar = this.main.append("g")
+	.attr("transform", "translate(" + this.layout.width_without_margins + "," + (this.dragbar_y_mid-10) + ")")
+	.attr("width", 25)
+	.attr("height", 20)
+	.attr("fill", "lightblue")
+	.attr("fill-opacity", .2)
+	.attr("cursor", "ew-resize")
+	.call(dragright);
+
+    this.dragbar.append("line")
+	.attr("x1", 5)
+	.attr("x2", 5)
+	.attr("y1", 0)
+	.attr("y2", 20)
+	.attr("class", "dragbar-line");
+    this.dragbar.append("line")
+	.attr("x1", 8)
+	.attr("x2", 8)
+	.attr("y1", 0)
+	.attr("y2", 20)
+	.attr("class", "dragbar-line");
+    this.dragbar.append("line")
+	.attr("x1", 11)
+	.attr("x2", 11)
+	.attr("y1", 0)
+	.attr("y2", 20)
+	.attr("class", "dragbar-line");
+	
+	
 
     // Start with showing the entire genome
     this.visStart = 0;
@@ -511,6 +549,45 @@ genomeTrack.prototype.update = function(startbp, endbp) {
 
 genomeTrack.prototype.update_finished = function(startbp, endbp) {
     //    console.log("Thank you, got: " + startbp, endbp);
+
+}
+
+genomeTrack.prototype.resize = function(newWidth) {
+    this.layout.width = newWidth;
+
+    this.layout.width_without_margins =
+	this.layout.width - this.layout.left_margin -
+	this.layout.right_margin;
+
+    console.log("new width: " + this.layout.width);
+    console.log("new width_without_margins: " + this.layout.width_without_margins);
+
+    this.x
+	.range([0,this.layout.width_without_margins]);
+    this.x1
+	.range([0,this.layout.width_without_margins]);
+
+    this.chart
+	.attr("width", this.layout.width)
+
+    console.log(this.clipPath);
+    this.clipPath
+	.attr("width", this.layout.width_without_margins)
+    
+    this.main
+	.attr("width", this.layout.width_without_margins)
+
+    this.redraw();
+
+}
+
+genomeTrack.prototype.dragresize = function(d) {
+    var newWidth = d3.event.x;
+    this.dragbar
+    .attr("transform", "translate(" + (newWidth- this.layout.left_margin -
+				       this.layout.right_margin) + "," + (this.dragbar_y_mid-15) + ")")
+
+    this.resize(newWidth);
 
 }
 

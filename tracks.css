@@ -10,6 +10,11 @@
     font: 12px sans-serif;	
 }
 
+.dragbar-line {
+    stroke-width: 1;	
+    stroke: lightgrey;
+}
+
 .track1_pos {
     fill: darksalmon;
     stroke: #d1876d;
