@@ -6,6 +6,7 @@ var linearTrackDefaults = {
     bottom_margin: 5,
     axis_height: 50,
     name: "defaultlinear",
+    dragresize: true,
 };
 
 function genomeTrack(layout,tracks) {
@@ -72,41 +73,39 @@ function genomeTrack(layout,tracks) {
 	.attr("class", "mainTrack");
 
     // Resize dragger
+    if(this.layout.dragresize == true) {
+	var dragright = d3.behavior.drag()
+	    .on("drag", this.dragresize.bind(this));
 
-    var dragright = d3.behavior.drag()
-	//	.origin(function(d) { return d; })
-	//	.origin(Object)
-	.on("drag", this.dragresize.bind(this));
+	this.dragbar_y_mid = this.layout.height/2;
+	this.dragbar = this.main.append("g")
+	    .attr("transform", "translate(" + this.layout.width_without_margins + "," + (this.dragbar_y_mid-10) + ")")
+	    .attr("width", 25)
+	    .attr("height", 20)
+	    .attr("fill", "lightblue")
+	    .attr("fill-opacity", .2)
+	    .attr("cursor", "ew-resize")
+	    .call(dragright);
 
-    this.dragbar_y_mid = this.layout.height/2;
-    this.dragbar = this.main.append("g")
-	.attr("transform", "translate(" + this.layout.width_without_margins + "," + (this.dragbar_y_mid-10) + ")")
-	.attr("width", 25)
-	.attr("height", 20)
-	.attr("fill", "lightblue")
-	.attr("fill-opacity", .2)
-	.attr("cursor", "ew-resize")
-	.call(dragright);
-
-    this.dragbar.append("line")
-	.attr("x1", 5)
-	.attr("x2", 5)
-	.attr("y1", 0)
-	.attr("y2", 20)
-	.attr("class", "dragbar-line");
-    this.dragbar.append("line")
-	.attr("x1", 8)
-	.attr("x2", 8)
-	.attr("y1", 0)
-	.attr("y2", 20)
-	.attr("class", "dragbar-line");
-    this.dragbar.append("line")
-	.attr("x1", 11)
-	.attr("x2", 11)
-	.attr("y1", 0)
-	.attr("y2", 20)
-	.attr("class", "dragbar-line");
-	
+	this.dragbar.append("line")
+	    .attr("x1", 5)
+	    .attr("x2", 5)
+	    .attr("y1", 0)
+	    .attr("y2", 20)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 8)
+	    .attr("x2", 8)
+	    .attr("y1", 0)
+	    .attr("y2", 20)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 11)
+	    .attr("x2", 11)
+	    .attr("y1", 0)
+	    .attr("y2", 20)
+	    .attr("class", "dragbar-line");
+    }
 	
 
     // Start with showing the entire genome
