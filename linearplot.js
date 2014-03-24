@@ -89,20 +89,20 @@ function genomeTrack(layout,tracks) {
 	    .call(dragright);
 
 	this.dragbar.append("line")
-	    .attr("x1", 5)
-	    .attr("x2", 5)
+	    .attr("x1", 6)
+	    .attr("x2", 6)
 	    .attr("y1", 0)
 	    .attr("y2", 20)
 	    .attr("class", "dragbar-line");
 	this.dragbar.append("line")
-	    .attr("x1", 8)
-	    .attr("x2", 8)
+	    .attr("x1", 9)
+	    .attr("x2", 9)
 	    .attr("y1", 0)
 	    .attr("y2", 20)
 	    .attr("class", "dragbar-line");
 	this.dragbar.append("line")
-	    .attr("x1", 11)
-	    .attr("x2", 11)
+	    .attr("x1", 12)
+	    .attr("x2", 12)
 	    .attr("y1", 0)
 	    .attr("y2", 20)
 	    .attr("class", "dragbar-line");
@@ -728,4 +728,99 @@ genomeTrack.prototype.callBrushFinished = function() {
 	}
     }
 
+}
+
+////////////////////////////////////////////////
+//
+// Export functionality
+//
+////////////////////////////////////////////////
+
+// Allowed export formats are 'png' and 'svg'
+// The extension will be added, just summply the base
+// filename.
+
+// Saving to raster format is dependent on FileSaver.js
+// and canvg.js (which include rgbcolor.js & StackBlur.js),
+// they must be loaded before circularplot.js
+
+genomeTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, format) {
+        // First lets get the stylesheet
+    var sheetlength = stylesheetfile.length;
+    var style = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+	style.textContent += "<![CDATA[\n";
+    for (var i=0;i<document.styleSheets.length; i++) {
+	str = document.styleSheets[i].href;
+	if(null == str) continue;
+
+	if (str.substr(str.length-sheetlength)==stylesheetfile){
+      	    var rules = document.styleSheets[i].rules;
+            for (var j=0; j<rules.length;j++){
+		style.textContent += (rules[j].cssText + "\n");
+            }
+            break;
+    	}
+    }
+    style.textContent += "]]>";
+
+    // Now we clone the SVG element, resize and scale it up
+    var container = this.layout.container.slice(1);
+    var containertag = document.getElementById(container);
+    var clonedSVG = containertag.cloneNode(true);
+    var svg = clonedSVG.getElementsByTagName("svg")[0];
+
+    // We need to resize the svg with the new canvas size
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.setAttribute('width', this.layout.width*scaling);
+    svg.setAttribute('height', this.layout.height*scaling);
+
+    // Update first g tag with the scaling
+    g = svg.getElementsByTagName("g")[0];
+    transform = g.getAttribute("transform");
+    g.setAttribute("transform", transform + " scale(" + scaling + ")");
+
+    // Append the stylehsheet to the cloned svg element
+    // so when we export it the style are inline and 
+    // get rendered
+    svg.getElementsByTagName("defs")[0].appendChild(style);
+
+    // Fetch the actual SVG tag and convert it to a canvas
+    // element
+    var content = clonedSVG.innerHTML.trim();
+
+    if(format == 'svg') {
+	var a = document.createElement('a');
+	a.href = "data:application/octet-stream;base64;attachment," + btoa(content);
+	a.download = filename + ".svg";
+	a.click();
+
+    } else if(format == 'png') {
+	var canvas = document.createElement('canvas');
+	canvg(canvas, content);
+
+	// Convert the canvas to a data url (this could
+	// be displayed inline by inserting it in to an 
+	// <img> tag in the src attribute, ie
+	// <img src="'+imgData+'">
+	var theImage = canvas.toDataURL('image/png');
+
+	// Convert to a blob
+	var blob = this.dataURLtoBlob(theImage);
+
+	// Prompt to save
+	saveAs(blob, filename);
+    }
+}
+
+genomeTrack.prototype.dataURLtoBlob = function(dataURL) {
+  // Decode the dataURL    
+  var binary = atob(dataURL.split(',')[1]);
+  // Create 8-bit unsigned array
+  var array = [];
+  for(var i = 0; i < binary.length; i++) {
+      array.push(binary.charCodeAt(i));
+  }
+  // Return our Blob object
+  return new Blob([new Uint8Array(array)], {type: 'image/png'});
 }
