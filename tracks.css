@@ -13,6 +13,7 @@
 .dragbar-line {
     stroke-width: 1;	
     stroke: lightgrey;
+    pointer-events: inherit;
 }
 
 .dragbar-shadow {

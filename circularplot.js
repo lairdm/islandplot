@@ -1187,10 +1187,6 @@ circularTrack.prototype.resize = function(newWidth) {
 
     this.layout.radius = this.layout.factor*Math.min(newWidth/2, newWidth/2);
 
-    this.container
-	.attr("width", newWidth+this.layout.ExtraWidthX)
-	.attr("height", newWidth+this.layout.ExtraWidthY)
-
     this.layout.w = newWidth;
     this.layout.h = newWidth;
 
@@ -1230,6 +1226,10 @@ circularTrack.prototype.resize = function(newWidth) {
 	    // Do nothing for an unknown track type
 	}
     }
+
+    this.container
+	.attr("width", newWidth+this.layout.ExtraWidthX)
+	.attr("height", newWidth+this.layout.ExtraWidthY)
 
 }
 
