@@ -658,15 +658,21 @@ circularTrack.prototype.redrawBrush = function(startRad, endRad) {
 	    .outerRadius(cfg.radius-10);
 
 	this.brush
+	    .transition()
+	    .duration(1000)
 	    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")");
 
 	this.moveBrush(startRad, endRad);
 
 	d3.select("#brushStart")		
+	    .transition()
+	    .duration(1000)
 	    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
 	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
 
 	d3.select("#brushEnd")		
+	    .transition()
+	    .duration(1000)
 	    .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
 	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(endRad-Math.PI/2)));
 
