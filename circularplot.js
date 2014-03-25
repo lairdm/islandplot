@@ -53,6 +53,14 @@ function circularTrack(layout,tracks) {
 
     this.g.append("defs");
 
+    // Resize drag shadow
+    if(this.layout.dragresize == true) {
+	this.drag_shadow = this.container.append("rect")
+	    .attr("width", (this.layout.w+this.layout.ExtraWidthX))
+	    .attr("height", (this.layout.h+this.layout.ExtraWidthY))
+	    .attr("class", "dragbar-shadow linear_hidden");
+    }
+
     // Now we can start drawing the plots, first the basic axis...
     this.drawAxis();
 
@@ -93,8 +101,9 @@ function circularTrack(layout,tracks) {
     // Resize dragger
     if(this.layout.dragresize == true) {
 	var dragright = d3.behavior.drag()
-	    .on("dragstart", function() {  d3.event.sourceEvent.stopPropagation(); })
-	    .on("drag", this.dragresize.bind(this));
+	.on("dragstart", this.dragresize_start.bind(this))
+	    .on("drag", this.dragresize.bind(this))
+	    .on("dragend", this.dragresize_end.bind(this));
 
 	this.dragbar_y_mid = this.layout.h/2;
 	this.dragbar = this.container.append("g")
@@ -1124,15 +1133,49 @@ circularTrack.prototype.dragresize = function() {
 
     var newSize = Math.max(newWidth, newHeight);
 
-    console.log(this.layout.w);
-    console.log("x " + newWidth);
-    console.log("y " + newHeight);
+//    console.log(this.layout.w);
+//    console.log("x " + newWidth);
+//    console.log("y " + newHeight);
+
+    this.layout.newSize = newSize
+//    this.layout.w = newSize;
+//    this.layout.h = newSize;
+
+    this.dragbar
+	.attr("transform", "translate(" + (newSize+this.layout.ExtraWidthX-25) + "," +  (newSize+this.layout.ExtraWidthY-25) + ")")
+
+    this.drag_shadow
+	.attr("width", (newSize+this.layout.ExtraWidthX))
+	.attr("height", (newSize+this.layout.ExtraWidthY));
+
+    if((newSize >= this.layout.w) || (newSize >= this.layout.h)) {
+	this.container
+	    .attr("width", newSize+this.layout.ExtraWidthX)
+	    .attr("height", newSize+this.layout.ExtraWidthY)
+    }
+//    this.resize(newSize);
+
+}
+
+circularTrack.prototype.dragresize_start = function() {
+    d3.event.sourceEvent.stopPropagation();
+
+    this.drag_shadow
+	.attr("class", "dragbar-shadow");
+}
+
+circularTrack.prototype.dragresize_end = function() {
+    var newSize = this.layout.newSize;
+
+    console.log(newSize);
+
+    this.resize(this.layout.w);
 
     this.layout.w = newSize;
     this.layout.h = newSize;
 
-    this.dragbar
-	.attr("transform", "translate(" + (this.layout.w+this.layout.ExtraWidthX-25) + "," +  (this.layout.h+this.layout.ExtraWidthY-25) + ")")
+    this.drag_shadow
+	.attr("class", "linear_hidden dragbar-shadow");
 
     this.resize(newSize);
 

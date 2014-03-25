@@ -15,6 +15,12 @@
     stroke: lightgrey;
 }
 
+.dragbar-shadow {
+    stroke-width: 1;	
+    stroke: lightgrey;
+    fill: transparent;
+}
+
 .track1_pos {
     fill: darksalmon;
     stroke: #d1876d;
