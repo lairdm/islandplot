@@ -649,6 +649,30 @@ circularTrack.prototype.attachBrush = function(callbackObj) {
 
 }
 
+circularTrack.prototype.redrawBrush = function(startRad, endRad) {
+    var cfg = this.layout;
+
+    if('undefined' !== typeof this.brush) {
+
+	this.brushArc
+	    .outerRadius(cfg.radius-10);
+
+	this.brush
+	    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")");
+
+	this.moveBrush(startRad, endRad);
+
+	d3.select("#brushStart")		
+	    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
+	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
+
+	d3.select("#brushEnd")		
+	    .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
+	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(endRad-Math.PI/2)));
+
+    }
+}
+
 circularTrack.prototype.createBrush = function() {
     var g = this.g;
     var cfg = this.layout;
@@ -666,7 +690,7 @@ circularTrack.prototype.createBrush = function() {
     .endAngle(function(d){return xScale(0);})
     .startAngle(function(d){return xScale(0);});
 
-    g.insert("path", "defs")
+    this.brush = g.insert("path", "defs")
     .attr("d", this.brushArc)
     .attr("id", "polarbrush")
     .attr("class", "polarbrush")
@@ -794,6 +818,9 @@ circularTrack.prototype.moveBrush = function(startRad, endRad) {
 
     d3.select('#polarbrush')
     .attr("d", this.brushArc);
+
+    this.currentStart = startRad;
+    this.currentEnd = endRad;
     
 }
 
@@ -806,6 +833,8 @@ circularTrack.prototype.moveBrushbyBP = function(startbp, endbp) {
 
     this.brushStart = startRad;
     this.brushStartBP = startbp;
+    this.currentStart = startRad;
+    this.currentEnd = endRad;
     d3.select("#brushStart")		
     .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
     .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
@@ -1167,8 +1196,6 @@ circularTrack.prototype.dragresize_start = function() {
 circularTrack.prototype.dragresize_end = function() {
     var newSize = this.layout.newSize;
 
-    console.log(newSize);
-
     this.resize(this.layout.w);
 
     this.layout.w = newSize;
@@ -1178,6 +1205,8 @@ circularTrack.prototype.dragresize_end = function() {
 	.attr("class", "linear_hidden dragbar-shadow");
 
     this.resize(newSize);
+
+    this.redrawBrush(this.currentStart, this.currentEnd);
 
 }
 
