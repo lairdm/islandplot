@@ -12,6 +12,7 @@ var circularTrackDefaults = {
     spacing: 100000,
     legend_spacing: 5,
     min_radians: .02 * Math.PI,
+    dragresize: true,
 }
 
 function circularTrack(layout,tracks) {
@@ -40,11 +41,13 @@ function circularTrack(layout,tracks) {
 	.domain([0, layout.genomesize]);
     d3.select(layout.container).select("svg").remove();
 
-    this.g = d3.select(layout.container)
+    this.container = d3.select(layout.container)
 	.append("svg")	
 	.attr("id", function() { return layout.container.slice(1) + "_svg"; })
 	.attr("width", this.layout.w+this.layout.ExtraWidthX)
 	.attr("height", this.layout.h+this.layout.ExtraWidthY)
+    
+    this.g = this.container
 	.append("g")
 	.attr("transform", "translate(" + this.layout.TranslateX + "," + this.layout.TranslateY + ")");
 
@@ -86,13 +89,54 @@ function circularTrack(layout,tracks) {
 	    // Do nothing for an unknown track type
 	}
     }
+
+    // Resize dragger
+    if(this.layout.dragresize == true) {
+	var dragright = d3.behavior.drag()
+	    .on("dragstart", function() {  d3.event.sourceEvent.stopPropagation(); })
+//	    .on("drag", this.dragresize.bind(this));
+
+	this.dragbar_y_mid = this.layout.h/2;
+	this.dragbar = this.container.append("g")
+	    .attr("transform", "translate(" + (this.layout.w+this.layout.ExtraWidthX-15) + "," + (this.dragbar_y_mid-10) + ")")
+	    .attr("width", 25)
+	    .attr("height", 20)
+	    .attr("fill", "lightblue")
+	    .attr("fill-opacity", .2)
+	    .attr("cursor", "ew-resize")
+	    .call(dragright);
+
+	this.dragbar.append("line")
+	    .attr("x1", 6)
+	    .attr("x2", 6)
+	    .attr("y1", 0)
+	    .attr("y2", 20)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 9)
+	    .attr("x2", 9)
+	    .attr("y1", 0)
+	    .attr("y2", 20)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 12)
+	    .attr("x2", 12)
+	    .attr("y1", 0)
+	    .attr("y2", 20)
+	    .attr("class", "dragbar-line");
+    }
+
 }
 
 circularTrack.prototype.drawAxis = function() {
     var cfg = this.layout;
     var g = this.g;
 
-    var axis = g.selectAll(".axis")
+    this.axis_container = this.g
+	.append("g")
+	.attr("id", "axis_container")
+
+    var axis = this.axis_container.selectAll(".axis")
     .data(d3.range(0,cfg.genomesize, cfg.spacing))
     .enter()
     .append("g")
@@ -107,7 +151,7 @@ circularTrack.prototype.drawAxis = function() {
     .style("stroke", "grey")
     .style("stroke-width", "1px");
 
-    var axis_label = g.selectAll(".axislabel")
+    var axis_label = this.axis_container.selectAll(".axislabel")
     .data(d3.range(0,cfg.genomesize, cfg.spacing*cfg.legend_spacing))
     .enter()
     .append("g")
@@ -130,6 +174,27 @@ circularTrack.prototype.drawAxis = function() {
     this.drawCircle("outerAxis", cfg.radius-10, 'grey');
 }
 
+circularTrack.prototype.moveAxis = function() {
+    var cfg = this.layout;
+
+    this.axis_container
+	.selectAll("line")
+	.data(d3.range(0,cfg.genomesize, cfg.spacing))
+	.attr("x1", function(d, i){return cfg.w/2 + (20*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
+	.attr("y1", function(d, i){return cfg.h/2 + (20*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));})
+	.attr("x2", function(d, i){return cfg.w/2 + (cfg.radius*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
+	.attr("y2", function(d, i){return cfg.h/2 + (cfg.radius*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));});
+
+    this.axis_container
+	.selectAll("text")
+	.data(d3.range(0,cfg.genomesize, cfg.spacing*cfg.legend_spacing))
+	.attr("x", function(d, i){return cfg.w/2 + ((cfg.radius+10)*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
+	.attr("y", function(d, i){return cfg.h/2 + ((cfg.radius+10)*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));});
+
+    // And draw the pretty outer circle for the axis
+    this.moveCircle("outerAxis", cfg.radius-10);
+
+}
 // Helper function for drawing needed circles such
 // as in stranded tracks
 // Can be called standalone in setting up the look
@@ -157,11 +222,15 @@ circularTrack.prototype.drawCircle = function(name, radius, line_stroke, animate
 
 circularTrack.prototype.moveCircle = function(name, radius) {
     var g = this.g;
-    
+    var cfg = this.layout;
+
     g.selectAll("." + name + "_circle")
     .transition()
     .duration(1000)
-    .attr("r", radius);
+    .attr("r", radius)
+    .attr("cx", cfg.w/2)
+    .attr("cy", cfg.h/2);
+
 }
 
 // Remove a drawn circle, in a pretty animated way
@@ -188,9 +257,11 @@ circularTrack.prototype.drawPlot = function(i, animate) {
     var cfg = this.layout;
     var track = this.tracks[i];
 
-    var plotRange = d3.scale.linear()
+    this.tracks[i].plotRange = d3.scale.linear()
     .domain([track.plot_min, track.plot_max])
     .range([track.plot_radius-(track.plot_width/2), track.plot_radius+(track.plot_width/2)]);
+
+    var plotRange = this.tracks[i].plotRange;
 
     var lineFunction = d3.svg.line()
     .x(function(d, i) { return cfg.w/2 + ((('undefined' == typeof animate) ? plotRange(d) : 1 )*Math.cos((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
@@ -206,7 +277,7 @@ circularTrack.prototype.drawPlot = function(i, animate) {
 
     // Now do the mean circle if we have one
     if('undefined' !== typeof track.plot_mean) {
-	this.drawCircle(track.trackName, plotRange(track.plot_mean), "grey", animate);
+	this.drawCircle(track.trackName,  this.tracks[i].plotRange(track.plot_mean), "grey", animate);
     }  
 
     // And if we're doing an animated entrance...
@@ -227,9 +298,12 @@ circularTrack.prototype.movePlot = function(i, radius) {
     // ratherthan an animated entrance
     this.tracks[i].plot_radius = radius;
 
-     var plotRange = d3.scale.linear()
-    .domain([track.plot_min, track.plot_max])
-    .range([track.plot_radius-(track.plot_width/2), track.plot_radius+(track.plot_width/2)]);
+//     var plotRange = d3.scale.linear()
+    this.tracks[i].plotRange
+//    .domain([track.plot_min, track.plot_max])
+	.range([track.plot_radius-(track.plot_width/2), track.plot_radius+(track.plot_width/2)]);
+
+    var plotRange = this.tracks[i].plotRange;
 
     var lineFunction = d3.svg.line()
     .x(function(d, i, j) { return cfg.w/2 + (plotRange(d)*Math.cos((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
@@ -241,6 +315,11 @@ circularTrack.prototype.movePlot = function(i, radius) {
     plot.transition()
     .duration(1000)
     .attr("d", function(d,i) { return lineFunction(track.items)});
+
+    // Now move the mean circle if we have one
+    if('undefined' !== typeof track.plot_mean) {
+	this.moveCircle(track.trackName, this.tracks[i].plotRange(track.plot_mean));
+    }  
 }
 
 circularTrack.prototype.removePlot = function(i) {
@@ -398,10 +477,17 @@ circularTrack.prototype.moveTrack = function(i, innerRadius, outerRadius) {
     .transition()
     .duration(1000)
     .attr("d", arcShrink)
+    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
 
     // Just record the new radii in case we need them later
     this.tracks[i].inner_radius = innerRadius;
     this.tracks[i].outer_radius = outerRadius;
+
+    // And check if we've been asked to do a centre line
+    if('undefined' !== typeof track.centre_line_stroke) {
+	this.moveCircle(track.trackName, (track.inner_radius + track.outer_radius)/2);
+      }
+
 }
 
 circularTrack.prototype.removeTrack = function(i) {
@@ -1011,6 +1097,58 @@ circularTrack.prototype.showGlyphTrackType = function(name, type) {
     }
 
     this.drawGlyphTrack(i);
+
+}
+
+circularTrack.prototype.resize = function(newWidth) {
+    
+    var resize_ratio = newWidth / this.layout.radius / 2;
+
+    this.layout.radius = this.layout.factor*Math.min(newWidth/2, newWidth/2);
+
+    this.container
+	.attr("width", newWidth+this.layout.ExtraWidthX)
+	.attr("height", newWidth+this.layout.ExtraWidthY)
+
+    this.layout.w = newWidth;
+    this.layout.h = newWidth;
+
+    this.moveAxis();
+
+    // Resize the plots
+    for(var i=0; i < this.tracks.length; i++) {
+
+	if('undefined' !== typeof this.tracks[i].visible) {
+	    if(! this.tracks[i].visible) {
+		continue;
+	    }
+	}
+
+	// We're going to see what type of tracks we have
+	// and dispatch them appropriately
+
+	switch(this.tracks[i].trackType) {
+	case "plot":
+	    this.movePlot(i, (this.tracks[i].plot_radius*resize_ratio));
+	    break;
+	case "track":
+	    this.moveTrack(i, (this.tracks[i].inner_radius*resize_ratio), (this.tracks[i].outer_radius*resize_ratio));
+	    break;
+	case "stranded":
+	    this.moveTrack(i, (this.tracks[i].inner_radius*resize_ratio), (this.tracks[i].outer_radius*resize_ratio));
+	    break;
+	case "glyph":
+//	    this.findGlyphTypes(i);
+//	    this.tracks[i].container = 
+//		this.g.append("g")
+//		.attr("class", this.tracks[i].trackName + "_glyph_container")
+	    this.tracks[i].radius = this.tracks[i].radius * resize_ratio;
+	    this.drawGlyphTrack(i);
+	    break;
+	default:
+	    // Do nothing for an unknown track type
+	}
+    }
 
 }
 
