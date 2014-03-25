@@ -94,11 +94,11 @@ function circularTrack(layout,tracks) {
     if(this.layout.dragresize == true) {
 	var dragright = d3.behavior.drag()
 	    .on("dragstart", function() {  d3.event.sourceEvent.stopPropagation(); })
-//	    .on("drag", this.dragresize.bind(this));
+	    .on("drag", this.dragresize.bind(this));
 
 	this.dragbar_y_mid = this.layout.h/2;
 	this.dragbar = this.container.append("g")
-	    .attr("transform", "translate(" + (this.layout.w+this.layout.ExtraWidthX-15) + "," + (this.dragbar_y_mid-10) + ")")
+	    .attr("transform", "translate(" + (this.layout.w+this.layout.ExtraWidthX-25) + "," +  (this.layout.h+this.layout.ExtraWidthY-25) + ")")
 	    .attr("width", 25)
 	    .attr("height", 20)
 	    .attr("fill", "lightblue")
@@ -107,21 +107,39 @@ function circularTrack(layout,tracks) {
 	    .call(dragright);
 
 	this.dragbar.append("line")
-	    .attr("x1", 6)
-	    .attr("x2", 6)
+	    .attr("x1", 16)
+	    .attr("x2", 16)
+	    .attr("y1", 0)
+	    .attr("y2", 14)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 2)
+	    .attr("x2", 16)
+	    .attr("y1", 14)
+	    .attr("y2", 14)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 19)
+	    .attr("x2", 19)
+	    .attr("y1", 0)
+	    .attr("y2", 17)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 2)
+	    .attr("x2", 19)
+	    .attr("y1", 17)
+	    .attr("y2", 17)
+	    .attr("class", "dragbar-line");
+	this.dragbar.append("line")
+	    .attr("x1", 22)
+	    .attr("x2", 22)
 	    .attr("y1", 0)
 	    .attr("y2", 20)
 	    .attr("class", "dragbar-line");
 	this.dragbar.append("line")
-	    .attr("x1", 9)
-	    .attr("x2", 9)
-	    .attr("y1", 0)
-	    .attr("y2", 20)
-	    .attr("class", "dragbar-line");
-	this.dragbar.append("line")
-	    .attr("x1", 12)
-	    .attr("x2", 12)
-	    .attr("y1", 0)
+	    .attr("x1", 2)
+	    .attr("x2", 22)
+	    .attr("y1", 20)
 	    .attr("y2", 20)
 	    .attr("class", "dragbar-line");
     }
@@ -1097,6 +1115,26 @@ circularTrack.prototype.showGlyphTrackType = function(name, type) {
     }
 
     this.drawGlyphTrack(i);
+
+}
+
+circularTrack.prototype.dragresize = function() {
+    var newWidth = d3.event.x - this.layout.ExtraWidthX;
+    var newHeight = d3.event.y - this.layout.ExtraWidthY;
+
+    var newSize = Math.max(newWidth, newHeight);
+
+    console.log(this.layout.w);
+    console.log("x " + newWidth);
+    console.log("y " + newHeight);
+
+    this.layout.w = newSize;
+    this.layout.h = newSize;
+
+    this.dragbar
+	.attr("transform", "translate(" + (this.layout.w+this.layout.ExtraWidthX-25) + "," +  (this.layout.h+this.layout.ExtraWidthY-25) + ")")
+
+    this.resize(newSize);
 
 }
 
