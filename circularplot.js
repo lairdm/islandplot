@@ -115,6 +115,11 @@ function circularTrack(layout,tracks) {
 	    .attr("cursor", "ew-resize")
 	    .call(dragright);
 
+	this.dragbar.append("rect")
+	    .attr("width", 25)
+	    .attr("height", 20)
+	    .attr("fill-opacity", 0);
+
 	this.dragbar.append("line")
 	    .attr("x1", 16)
 	    .attr("x2", 16)
