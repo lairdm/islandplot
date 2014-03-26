@@ -212,6 +212,8 @@ circularTrack.prototype.moveAxis = function() {
     this.axis_container
 	.selectAll("line")
 	.data(d3.range(0,cfg.genomesize, cfg.spacing))
+        .transition()
+        .duration(1000)
 	.attr("x1", function(d, i){return cfg.w/2 + (20*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
 	.attr("y1", function(d, i){return cfg.h/2 + (20*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));})
 	.attr("x2", function(d, i){return cfg.w/2 + (cfg.radius*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
@@ -220,6 +222,8 @@ circularTrack.prototype.moveAxis = function() {
     this.axis_container
 	.selectAll("text")
 	.data(d3.range(0,cfg.genomesize, cfg.spacing*cfg.legend_spacing))
+        .transition()
+        .duration(1000)
 	.attr("x", function(d, i){return cfg.w/2 + ((cfg.radius+10)*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
 	.attr("y", function(d, i){return cfg.h/2 + ((cfg.radius+10)*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));});
 
