@@ -31,6 +31,10 @@ function circularTrack(layout,tracks) {
 	    }
 	}
 
+    if('undefined' == typeof layout.plotid) {
+	this.layout.plotid = layout.container.slice(1);
+    }
+
     // Setup some constants we'll need and build the canvas
     this.layout.radians_pre_bp = this.layout.radians/this.layout.genomesize;
     this.layout.min_bp_per_slice = this.layout.min_radians / this.layout.radians_pre_bp;
@@ -433,9 +437,9 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    if('undefined' !== typeof track.mouseclick) {
 		var fn = window[track.mouseclick];
 		if('object' ==  typeof fn) {
-		    return fn.onclick(track.trackName, d);
+		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 
 	    } else {
@@ -446,9 +450,11 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    if('undefined' !== typeof track.mouseover_callback) {
 		var fn = window[track.mouseover_callback];
 		if('object' ==  typeof fn) {
-		    return fn.mouseover(track.trackName, d);
+		    console.log("calling");
+		    fn.onmouseover(track.trackName, d, cfg.plotid);
+		    return true;
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackNamed, cfg.plotid);
 		}
 
 	    } else {
@@ -459,9 +465,9 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     	    if('undefined' !== typeof track.mouseover_callback) {
 		var fn = window[track.mouseout_callback];
 		if('object' ==  typeof fn) {
-		    return fn.mouseout(track.trackName, d);
+		    return fn.onmouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackNamed, cfg.plotid);
 		}
 
     	    } else {

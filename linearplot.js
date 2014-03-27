@@ -25,6 +25,10 @@ function genomeTrack(layout,tracks) {
 	}
     }
 
+    if('undefined' == typeof layout.plotid) {
+	this.layout.plotid = layout.container.slice(1);
+    }
+
     this.layout.width_without_margins =
 	this.layout.width - this.layout.left_margin -
 	this.layout.right_margin;
@@ -48,6 +52,8 @@ function genomeTrack(layout,tracks) {
 	.x(this.x1)
 	.on("zoom", this.rescale.bind(this))
 	.on("zoomend", this.callBrushFinished.bind(this));
+
+    this.layout.plotid = layout.container.slice(1);
 
     this.chart = d3.select(layout.container)
 	.append("svg")
@@ -244,6 +250,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
+    var cfg = this.layout;
 
     // Because of how the tooltip library binds to the SVG object we have to turn it
     // on or off here rather than in the .on() call, we'll redirect the calls to
@@ -296,9 +303,9 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
 		if('object' ==  typeof fn) {
-		    return fn.onclick(track.trackName, d);
+		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    } else {
 		null;
@@ -309,9 +316,9 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
-		    return fn.mouseover(track.trackName, d);
+		    return fn.onmouseover(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    }	
 	})
@@ -320,9 +327,9 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
-		    return fn.mouseout(track.trackName, d);
+		    return fn.onmouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    }	
 	});
@@ -352,6 +359,8 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
+    var cfg = this.layout;
+
     // Because of how the tooltip library binds to the SVG object we have to turn it
     // on or off here rather than in the .on() call, we'll redirect the calls to
     // a dummy do-nothing object if we're not showing tips in this context.
@@ -404,9 +413,9 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
 		if('object' ==  typeof fn) {
-		    return fn.onclick(track.trackName, d);
+		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    } else {
 		null;
@@ -417,9 +426,9 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
-		    return fn.mouseover(track.trackName, d);
+		    return fn.onmouseover(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    }	
 	})
@@ -428,9 +437,9 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
-		    return fn.mouseout(track.trackName, d);
+		    return fn.onmouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    }	
 	});
@@ -498,6 +507,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     visEnd = this.visEnd,
     x1 = this.x1,
     y1 = this.y1;
+    var cfg = this.layout;
 
     if((typeof track.visible !== 'undefined') && (track.visible != false)) {
     	return;
@@ -543,9 +553,9 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
 		if('object' ==  typeof fn) {
-		    return fn.onclick(track.trackName, d);
+		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    } else {
 		null;
@@ -555,9 +565,9 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
-		    return fn.mouseover(track.trackName, d);
+		    return fn.onmouseover(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    }	
 	})
@@ -565,9 +575,9 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
-		    return fn.mouseout(track.trackName, d);
+		    return fn.onmouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
-		    return fn(d);
+		    return fn(track.trackName, d, cfg.plotid);
 		}
 	    }	
 	});
