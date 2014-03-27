@@ -924,6 +924,13 @@ circularTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, f
     var clonedSVG = containertag.cloneNode(true);
     var svg = clonedSVG.getElementsByTagName("svg")[0];
 
+    var tags = svg.getElementsByClassName("dragbar-shadow")
+    for(var i=0; i<tags.length; i++) {
+	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+        }
+    }
+
     // We need to resize the svg with the new canvas size
     svg.removeAttribute('width');
     svg.removeAttribute('height');
