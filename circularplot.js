@@ -13,6 +13,7 @@ var circularTrackDefaults = {
     legend_spacing: 5,
     min_radians: .02 * Math.PI,
     dragresize: true,
+    movecursor: false,
 }
 
 function circularTrack(layout,tracks) {
@@ -55,7 +56,57 @@ function circularTrack(layout,tracks) {
 	.append("g")
 	.attr("transform", "translate(" + this.layout.TranslateX + "," + this.layout.TranslateY + ")");
 
-    this.g.append("defs");
+    this.defs = this.g.append("defs");
+
+    this.defs.append('svg:marker')
+	.attr('id', 'end-arrow')
+	.attr('viewBox', '0 -5 10 10')
+	.attr('refX', 6)
+	.attr('markerWidth', 7)
+	.attr('markerHeight', 7)
+	.attr('orient', 'auto')
+	.append('svg:path')
+	.attr('d', 'M0,-5L10,0L0,5')
+	.attr('class', "move-cross");
+
+    this.defs.append('svg:marker')
+	.attr('id', 'start-arrow')
+	.attr('viewBox', '0 -5 10 10')
+	.attr('refX', 4)
+	.attr('markerWidth', 7)
+	.attr('markerHeight', 7)
+	.attr('orient', 'auto')
+	.append('svg:path')
+	.attr('d', 'M10,-5L0,0L10,5')
+	.attr('class', "move-cross");
+	//    .attr('fill', '#000');
+
+    // Display the dragging cross if needed
+    if(this.layout.movecursor == true) {
+	this.g.append("rect")
+	    .attr("width", 18)
+	    .attr("height", 18)
+	    .attr("fill-opacity", 0)
+	    .attr("class", "move-shadow");
+
+	this.g.append("line")
+	    .attr("x1", 0)
+	    .attr("x2", 18)
+	    .attr("y1", 9)
+	    .attr("y2", 9)
+	    .style('marker-start', 'url(#start-arrow)')
+	    .style('marker-end', 'url(#end-arrow)')
+	    .attr("class", "move-cross");
+
+	this.g.append("line")
+	    .attr("x1", 9)
+	    .attr("x2", 9)
+	    .attr("y1", 0)
+	    .attr("y2", 18)
+	    .style('marker-start', 'url(#start-arrow)')
+	    .style('marker-end', 'url(#end-arrow)')
+	    .attr("class", "move-cross");
+    }
 
     // Resize drag shadow
     if(this.layout.dragresize == true) {
@@ -92,9 +143,9 @@ function circularTrack(layout,tracks) {
 	    break;
 	case "glyph":
 	    this.findGlyphTypes(i);
-	    this.tracks[i].container = 
-		this.g.append("g")
-		.attr("class", this.tracks[i].trackName + "_glyph_container")
+	    //	    this.tracks[i].container = 
+	    //	this.g.append("g")
+	    //	.attr("class", this.tracks[i].trackName + "_glyph_container")
 	    this.drawGlyphTrack(i);
 	    break;
 	default:
@@ -451,7 +502,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 		var fn = window[track.mouseover_callback];
 		if('object' ==  typeof fn) {
 		    console.log("calling");
-		    fn.onmouseover(track.trackName, d, cfg.plotid);
+		    fn.mouseover(track.trackName, d, cfg.plotid);
 		    return true;
 		} else if('function' == typeof fn) {
 		    return fn(track.trackNamed, cfg.plotid);
@@ -462,10 +513,10 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    }
 	})
     .on("mouseout", function(d, i) {
-    	    if('undefined' !== typeof track.mouseover_callback) {
+    	    if('undefined' !== typeof track.mouseout_callback) {
 		var fn = window[track.mouseout_callback];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseout(track.trackName, d, cfg.plotid);
+		    return fn.mouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackNamed, cfg.plotid);
 		}
@@ -603,7 +654,8 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     var x = function(d,i) { return cfg.w/2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
     var y = function(d,i) { return cfg.h/2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
 
-    var trackPath = track.container.selectAll("path")
+    var trackPath = g.selectAll("." + track.trackName)
+    //    var trackPath = track.container.selectAll("." + track.trackName)
     .data(items, function(d) { return d.id; });
 
     trackPath.transition()
@@ -614,7 +666,7 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     trackPath.enter()
     .append('path')
     .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
-    .attr('class', function(d) {return track.trackName + '_' + d.type})
+    .attr('class', function(d) {return track.trackName + '_' + d.type + ' ' + track.trackName})
     .attr("d", d3.svg.symbol().type(track.glyphType).size(track.glyphSize))
     .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
     .style("opacity", 0)

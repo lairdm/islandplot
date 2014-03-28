@@ -316,7 +316,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseover(track.trackName, d, cfg.plotid);
+		    return fn.mouseover(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
 		}
@@ -327,7 +327,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseout(track.trackName, d, cfg.plotid);
+		    return fn.mouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
 		}
@@ -426,7 +426,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseover(track.trackName, d, cfg.plotid);
+		    return fn.mouseover(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
 		}
@@ -437,7 +437,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseout(track.trackName, d, cfg.plotid);
+		    return fn.mouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
 		}
@@ -565,7 +565,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseover(track.trackName, d, cfg.plotid);
+		    return fn.mouseover(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
 		}
@@ -575,7 +575,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
-		    return fn.onmouseout(track.trackName, d, cfg.plotid);
+		    return fn.mouseout(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
 		}
