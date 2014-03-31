@@ -36,6 +36,8 @@ function circularTrack(layout,tracks) {
 	this.layout.plotid = layout.container.slice(1);
     }
 
+    this.layout.containerid =  layout.container.slice(1);
+
     // Setup some constants we'll need and build the canvas
     this.layout.radians_pre_bp = this.layout.radians/this.layout.genomesize;
     this.layout.min_bp_per_slice = this.layout.min_radians / this.layout.radians_pre_bp;
@@ -87,7 +89,7 @@ function circularTrack(layout,tracks) {
 	    .attr("width", 18)
 	    .attr("height", 18)
 	    .attr("fill-opacity", 0)
-	    .attr("class", "move-shadow");
+	    .attr("class", "move-shadow move_" + this.layout.containerid);
 
 	this.g.append("line")
 	    .attr("x1", 0)
@@ -96,7 +98,7 @@ function circularTrack(layout,tracks) {
 	    .attr("y2", 9)
 	    .style('marker-start', 'url(#start-arrow)')
 	    .style('marker-end', 'url(#end-arrow)')
-	    .attr("class", "move-cross");
+	    .attr("class", "move-cross move_" + this.layout.containerid);
 
 	this.g.append("line")
 	    .attr("x1", 9)
@@ -105,7 +107,7 @@ function circularTrack(layout,tracks) {
 	    .attr("y2", 18)
 	    .style('marker-start', 'url(#start-arrow)')
 	    .style('marker-end', 'url(#end-arrow)')
-	    .attr("class", "move-cross");
+	    .attr("class", "move-cross move_" + this.layout.containerid);
     }
 
     // Resize drag shadow
@@ -488,6 +490,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    if('undefined' !== typeof track.mouseclick) {
 		var fn = window[track.mouseclick];
 		if('object' ==  typeof fn) {
+		    console.log(fn);
 		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
@@ -731,13 +734,13 @@ circularTrack.prototype.redrawBrush = function(startRad, endRad) {
 
 	this.moveBrush(startRad, endRad);
 
-	d3.select("#brushStart")		
+	d3.select("#brushStart_" + cfg.containerid)		
 	    .transition()
 	    .duration(1000)
 	    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
 	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
 
-	d3.select("#brushEnd")		
+	d3.select("#brushEnd_" + cfg.containerid)		
 	    .transition()
 	    .duration(1000)
 	    .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
@@ -765,7 +768,7 @@ circularTrack.prototype.createBrush = function() {
 
     this.brush = g.insert("path", "defs")
     .attr("d", this.brushArc)
-    .attr("id", "polarbrush")
+    .attr("id", "polarbrush_" + cfg.containerid)
     .attr("class", "polarbrush")
     .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
 
@@ -783,7 +786,7 @@ circularTrack.prototype.createBrush = function() {
 		return;
 	    }
 
-	    d3.select("#brushStart")		
+	    g.select("#brushStart_" + cfg.containerid)		
 	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
 	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
 		
@@ -813,7 +816,7 @@ circularTrack.prototype.createBrush = function() {
 		return;
 	    }
 
-	    d3.select("#brushEnd")		
+	    g.select("#brushEnd_" + cfg.containerid)		
 	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
 	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
 		
@@ -831,7 +834,7 @@ circularTrack.prototype.createBrush = function() {
 
     this.endBrushObj = g.append("circle")
     .attr({
-	    id: 'brushEnd',
+	    id: 'brushEnd_' + cfg.containerid,
 	    class: 'brushEnd',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
@@ -841,7 +844,7 @@ circularTrack.prototype.createBrush = function() {
 
     this.startBrushObj = g.append("circle")
     .attr({
-	    id: 'brushStart',
+	    id: 'brushStart_' + cfg.containerid,
 	    class: 'brushStart',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
@@ -889,7 +892,7 @@ circularTrack.prototype.moveBrush = function(startRad, endRad) {
     .startAngle(startRad)
     .endAngle(endRad);
 
-    d3.select('#polarbrush')
+    d3.select('#polarbrush_' + cfg.containerid)
     .attr("d", this.brushArc);
 
     this.currentStart = startRad;
@@ -908,13 +911,13 @@ circularTrack.prototype.moveBrushbyBP = function(startbp, endbp) {
     this.brushStartBP = startbp;
     this.currentStart = startRad;
     this.currentEnd = endRad;
-    d3.select("#brushStart")		
+    d3.select("#brushStart_" + cfg.containerid)		
     .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
     .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
 
     this.brushEnd = endRad;
     this.brushEndBP = endbp;
-    d3.select("#brushEnd")		
+    d3.select("#brushEnd_" + cfg.containerid)		
     .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
     .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(endRad-Math.PI/2)));
 
@@ -922,24 +925,28 @@ circularTrack.prototype.moveBrushbyBP = function(startbp, endbp) {
 }
 
 circularTrack.prototype.hideBrush = function() {
-    d3.select("#brushStart")
+    var cfg = this.layout;
+
+    d3.select("#brushStart_" + cfg.containerid)
     .style("visibility", "hidden");
 
-    d3.select("#brushEnd")
+    d3.select("#brushEnd_" + cfg.containerid)
     .style("visibility", "hidden");
 
-    d3.select('#polarbrush')
+    d3.select('#polarbrush_' + cfg.containerid)
     .style("visibility", "hidden");
 }
 
 circularTrack.prototype.showBrush = function() {
-    d3.select("#brushStart")
+    var cfg = this.layout;
+
+    d3.select("#brushStart_" + cfg.containerid)
     .style("visibility", "visible");
 
-    d3.select("#brushEnd")
+    d3.select("#brushEnd_" + cfg.containerid)
     .style("visibility", "visible");
 
-    d3.select('#polarbrush')
+    d3.select('#polarbrush_' + cfg.containerid)
     .style("visibility", "visible");
 }
 
