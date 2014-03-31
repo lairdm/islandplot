@@ -29,6 +29,8 @@ function genomeTrack(layout,tracks) {
 	this.layout.plotid = layout.container.slice(1);
     }
 
+    this.layout.containerid = layout.container.slice(1);
+
     this.layout.width_without_margins =
 	this.layout.width - this.layout.left_margin -
 	this.layout.right_margin;
@@ -92,6 +94,7 @@ function genomeTrack(layout,tracks) {
 	    .attr("fill", "lightblue")
 	    .attr("fill-opacity", .2)
 	    .attr("cursor", "ew-resize")
+	    .attr("id", "dragbar_" + this.layout.containerid)
 	    .call(dragright);
 
 	this.dragbar.append("rect")
@@ -638,6 +641,7 @@ genomeTrack.prototype.dragresize = function(d) {
     .attr("transform", "translate(" + (newWidth -
 				       this.layout.right_margin) + "," + (this.dragbar_y_mid-15) + ")")
 
+    console.log(this.layout.containerid);
     this.resize(newWidth);
     //    d3.event.preventDefault();
 
