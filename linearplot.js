@@ -66,7 +66,7 @@ function genomeTrack(layout,tracks) {
 	.call(this.zoom);
 
     this.clipPath = this.chart.append("defs").append("clipPath")
-	.attr("id", "trackClip_" + this.layout.name)
+	.attr("id", "trackClip_" + this.layout.containerid)
 	.append("rect")
 	.attr("width", this.layout.width_without_margins)
 	//	.attr("width", this.layout.width_without_margins + this.layout.right_margin)
@@ -169,14 +169,14 @@ function genomeTrack(layout,tracks) {
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
-		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
 	    this.displayStranded(this.tracks[i], i);
 	    break;
 	case "track":
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
-		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
 	    this.displayTrack(this.tracks[i], i);
 	    break;
 	case "glyph":
@@ -193,14 +193,14 @@ function genomeTrack(layout,tracks) {
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
-		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
 	    this.displayGlyphTrack(this.tracks[i], i);
 	    break;
 	case "plot":
 	    this.tracks[i].g = this.itemRects[i] = this.main.append("g")
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
-		.attr("clip-path", "url(#trackClip_" + this.layout.name + ")");
+		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
 	    this.tracks[i].g.append("path")
 		.attr("class", this.tracks[i].trackName)
 		.attr("id", this.tracks[i].trackName)
