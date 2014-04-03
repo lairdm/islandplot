@@ -504,7 +504,6 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    if('undefined' !== typeof track.mouseover_callback) {
 		var fn = window[track.mouseover_callback];
 		if('object' ==  typeof fn) {
-		    console.log("calling");
 		    fn.mouseover(track.trackName, d, cfg.plotid);
 		    return true;
 		} else if('function' == typeof fn) {
