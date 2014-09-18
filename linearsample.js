@@ -17,3 +17,8 @@ if('undefined' !== typeof cTrack) {
 function linearPopup(d) {
     console.log(d);
 }
+
+function linearClick(d) {
+    console.log(d);
+    window.open("http://www.google.com", '_blank');
+}

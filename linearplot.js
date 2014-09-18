@@ -52,8 +52,9 @@ function genomeTrack(layout,tracks) {
 
     this.zoom = d3.behavior.zoom()
 	.x(this.x1)
+	.on("zoomstart", function () {d3.event.sourceEvent.preventDefault()} )
 	.on("zoom", this.rescale.bind(this))
-	.on("zoomend", this.callBrushFinished.bind(this));
+	.on("zoomend", this.callBrushFinished.bind(this) );
 
     this.layout.plotid = layout.container.slice(1);
 
@@ -304,6 +305,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     .attr("width", function(d) {return d.width;})
     .attr("height", function(d) {return .9 * y1(1);})
     .on("click", function(d,i) {
+	    if (d3.event.defaultPrevented) return; // click suppressed
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
 		if('object' ==  typeof fn) {
@@ -415,6 +417,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     .attr("width", function(d) {return d.width; })
     .attr("height", function(d) {return .8 * y1(1);})
     .on("click", function(d,i) {
+	    if (d3.event.defaultPrevented) return; // click suppressed
 	    if('undefined' !== typeof track.linear_mouseclick) {
 		var fn = window[track.linear_mouseclick];
 		if('object' ==  typeof fn) {

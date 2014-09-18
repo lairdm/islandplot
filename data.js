@@ -10,6 +10,7 @@ var tracks = [
 		linear_mouseclick: 'linearPopup',
 		showLabels: true,
 		showTooltip: true,
+		linear_mouseclick: 'linearClick',
 		items: [
                          {id: 1, start:0, end:30000, name:"island0", strand: -1},
                          {id: 2, start:60000,end:100000, name:"island1", strand: -1},
