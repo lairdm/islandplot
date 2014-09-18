@@ -15,8 +15,8 @@ var tracks = [
                          {id: 2, start:60000,end:100000, name:"island1", strand: -1},
                          {id: 3, start:800000,end:1000000, name:"island2withavery long name", strand: 1},
                          {id: 4, start:1200000,end:1500000, name:"island3", strand: 1},
-                         {id: 5, start:1500000,end:1700000, name:"island4",strand: -1},
-                         {id:6, start:2000000,end:2100000, name:"is", strand: 1}
+                         {id: 5, start:1500000,end:1700000, name:"island4",strand: -1, extraclass: "cellwall"},
+                         {id:6, start:2000000,end:2100000, name:"is", strand: 1, extraclass: "innermembrane"}
 			]
 	      },
 	      { trackName: "track2",

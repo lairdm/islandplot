@@ -277,7 +277,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width;})
-    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '' );});
+    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
 
     rects.selectAll("text")
     .attr("dx", "2px")
@@ -295,11 +295,12 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 
     var entering_rects = rects.enter().append("g")
     .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' +  (y1((d.strand == -1 ? stackNum : stackNum-1)) + 10) + ")"; })
+    .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
     .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + '_group'; });
 	    
     entering_rects.append("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
-    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '' );})
+    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
     .attr("width", function(d) {return d.width;})
     .attr("height", function(d) {return .9 * y1(1);})
     .on("click", function(d,i) {
@@ -387,7 +388,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width; })
-    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' );});
+    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
 
     rects.selectAll("text")
     .attr("dx", "2px")
@@ -405,11 +406,12 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 
     var entering_rects = rects.enter().append("g")
     .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' + (y1(stackNum) + 10)  + ")"; })
+    .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
     .attr("class", function(d) {return track.trackName + '_group'; });
 
     entering_rects.append("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
-    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' );})
+    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
     .attr("width", function(d) {return d.width; })
     .attr("height", function(d) {return .8 * y1(1);})
     .on("click", function(d,i) {
