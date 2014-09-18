@@ -33,6 +33,19 @@
     cursor:move !important;
 }
 
+#linearchart {
+    cursor: -webkit-grab; cursor: -moz-grab;
+}
+
+#linearchart:active {
+    cursor: -webkit-grabbing; cursor: -moz-grabbing;
+}
+
+.mainTrack {
+    cursor: pointer; 
+    cursor: hand;
+}
+
 .track1_pos {
     fill: darksalmon;
     stroke: #d1876d;
