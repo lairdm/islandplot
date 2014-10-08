@@ -60,6 +60,12 @@
     stroke: #4c602a;
 }
 
+.track1_none {
+    fill: #cccccc;
+    fill-opacity: .7;
+    stroke-width: 1;
+}
+
 .track1_pos:hover {
     fill: red;
     stroke-width: 1;

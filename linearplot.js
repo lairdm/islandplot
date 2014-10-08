@@ -272,13 +272,30 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 
     var rects = this.itemRects[i].selectAll("g")
     .data(visItems, function(d) { return d.id; })
-    .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' +  (y1((d.strand == -1 ? stackNum : stackNum-1)) + 10) + ")"; });
+	.attr("transform", function(d,i) { 
+	    if(d.strand == -1) {
+		ystack = stackNum;
+	    } else if(d.strand == 1) {
+		ystack = stackNum -1;
+	    } else {
+		ystack = stackNum - 0.3;
+	    }
+	    return "translate(" + x1(d.start) + ',' +  (y1(ystack) + 10) + ")"; });
 
     rects.selectAll("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
     //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width;})
-    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
+    .attr("class", function(d) {
+	if(d.strand == -1) {
+	    suffix = 'neg';
+	} else if(d.strand == 1) {
+	    suffix = 'pos';
+	} else {
+	    suffix = 'none';
+	}
+
+	return track.trackName + '_' + suffix + ' ' + ((d.width > 5) ? (track.trackName + '_' + suffix + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
 
     rects.selectAll("text")
     .attr("dx", "2px")
@@ -292,18 +309,51 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    //	    console.log(bb.width);
 	    //	    console.log(d.visible);
 	})
-    .attr("class", function(d) {return track.trackName + '_text ' + track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + '_text ' + (d.visible ? null : "linear_hidden" ); });
+    .attr("class", function(d) {
+	if(d.strand == -1) {
+	    suffix = 'neg';
+	} else if(d.strand == 1) {
+	    suffix = 'pos';
+	} else {
+	    suffix = 'none';
+	}
+	return track.trackName + '_text ' + track.trackName + '_' + suffix + '_text ' + (d.visible ? null : "linear_hidden" ); });
 
     var entering_rects = rects.enter().append("g")
-    .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' +  (y1((d.strand == -1 ? stackNum : stackNum-1)) + 10) + ")"; })
+    .attr("transform", function(d,i) {
+	    if(d.strand == -1) {
+		ystack = stackNum;
+	    } else if(d.strand == "1") {
+		ystack = stackNum -1;
+	    } else {
+		ystack = stackNum - 0.3;
+	    }
+	    return "translate(" + x1(d.start) + ',' +  (y1(ystack) + 10) + ")"; })
     .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
-    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + '_group'; });
+    .attr("class", function(d) {
+	if(d.strand == -1) {
+	    suffix = 'neg';
+	} else if(d.strand == 1) {
+	    suffix = 'pos';
+	} else {
+	    suffix = 'none';
+	}
+	return track.trackName + '_' + suffix + '_group'; });
 	    
     entering_rects.append("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
-    .attr("class", function(d) {return track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + ' ' + ((d.width > 5) ? (track.trackName + '_' + (d.strand == 1 ? 'pos_zoomed' : 'neg_zoomed')) : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
+    .attr("class", function(d) {
+	if(d.strand == -1) {
+	    suffix = 'neg';
+	} else if(d.strand == 1) {
+	    suffix = 'pos';
+	} else {
+	    suffix = 'none';
+	}
+
+	return track.trackName + '_' + suffix + ' ' + ((d.width > 5) ? (track.trackName + '_' + suffix + '_zoomed') : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
     .attr("width", function(d) {return d.width;})
-    .attr("height", function(d) {return .9 * y1(1);})
+	.attr("height", function(d) {return (d.strand == 0 ? .4 : .9) * y1(1);})
     .on("click", function(d,i) {
 	    if (d3.event.defaultPrevented) return; // click suppressed
 	    if('undefined' !== typeof track.linear_mouseclick) {
@@ -354,7 +404,15 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 		    //		    console.log(bb.width);
 		    //		    console.log(d.visible);
 		})
-	    .attr("class", function(d) {return track.trackName + '_text ' +  track.trackName + '_' + (d.strand == 1 ? 'pos' : 'neg') + '_text ' + (d.visible ? null : "linear_hidden"  ); });
+	    .attr("class", function(d) {
+		if(d.strand == -1) {
+		    suffix = 'neg';
+		} else if(d.strand == 1) {
+		    suffix = 'pos';
+		} else {
+		    suffix = 'none';
+		}
+		return track.trackName + '_text ' +  track.trackName + '_' + suffix + '_text ' + (d.visible ? null : "linear_hidden"  ); });
     }
 
     rects.exit().remove();
