@@ -283,7 +283,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    return "translate(" + x1(d.start) + ',' +  (y1(ystack) + 10) + ")"; });
 
     rects.selectAll("rect")
-    .each(function (d) { d.width = x1(d.end) - x1(d.start); })
+    .each(function (d) { d.width = x1(d.end + 1) - x1(d.start); })
     //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width;})
     .attr("class", function(d) {
@@ -317,7 +317,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	} else {
 	    suffix = 'none';
 	}
-	return track.trackName + '_text ' + track.trackName + '_' + suffix + '_text ' + (d.visible ? null : "linear_hidden" ); });
+	return track.trackName + '_text ' + track.trackName + '_' + suffix + '_text ' + (d.visible ? '' : "linear_hidden " ) + ('undefined' !== typeof d.extraclass ? d.extraclass : ''); });
 
     var entering_rects = rects.enter().append("g")
     .attr("transform", function(d,i) {
