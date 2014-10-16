@@ -49,6 +49,8 @@ function genomeTrack(layout,tracks) {
     this.y1 = d3.scale.linear()
 	.domain([0,this.numTracks])
 	.range([0,(this.layout.height_without_axis-this.layout.bottom_margin)]);
+    // We need x1 and y1 in the initialization's scope too
+    // to deal with passing it in to make the lollipops
 
     this.zoom = d3.behavior.zoom()
 	.x(this.x1)
@@ -66,7 +68,8 @@ function genomeTrack(layout,tracks) {
 	.attr("class", "mainTracks")
 	.call(this.zoom);
 
-    this.clipPath = this.chart.append("defs").append("clipPath")
+    this.defs = this.chart.append("defs");
+    this.clipPath = this.defs.append("clipPath")
 	.attr("id", "trackClip_" + this.layout.containerid)
 	.append("rect")
 	.attr("width", this.layout.width_without_margins)
@@ -75,6 +78,8 @@ function genomeTrack(layout,tracks) {
 	.attr("transform", "translate(0,0)");
     //	.attr("transform", "translate(" + this.layout.left_margin + ",0)");
     
+    this.drawFeatures();
+
     this.main = this.chart.append("g")
        	.attr("transform", "translate(" + this.layout.left_margin + ",0)")
 	.attr("width", this.layout.width_without_margins)
@@ -160,9 +165,17 @@ function genomeTrack(layout,tracks) {
 	// We're going to see what type of tracks we have
 	// and dispatch them appropriately
 
-	 if("undefined" !== this.tracks[i].skipLinear
+	 if("undefined" !== typeof this.tracks[i].skipLinear
 	    &&  this.tracks[i].skipLinear == true) {
 	     continue;
+	 }
+
+	 if("undefined" == typeof this.tracks[i].trackFeatures) {
+	     this.tracks[i].trackFeatures = "simple";
+	 }
+
+	 if("undefined" == typeof this.tracks[i].featureThreshold) {
+	     this.tracks[i].featureThreshold = this.genomesize;
 	 }
 
 	switch(this.tracks[i].trackType) {
@@ -215,6 +228,9 @@ function genomeTrack(layout,tracks) {
 	}
     }
 
+    //    this.main.append("g").attr("transform", "matrix(0.7, 0, 0, 0.7, 0, 0)").append("use").attr("xlink:href", "#lollipop");
+    //    this.main.append("g").attr("transform", "translate(100,137)").on("click", function() { console.log("click!");}).append("use").attr("xlink:href", "#lollipop_strand_pos");
+
 }
 
 // We can't display all track types, or some don't
@@ -252,6 +268,7 @@ genomeTrack.prototype.countTracks = function() {
 genomeTrack.prototype.displayStranded = function(track, i) {
     var visStart = this.visStart,
     visEnd = this.visEnd,
+    visRange = visEnd - visStart,
     x1 = this.x1,
     y1 = this.y1;
     var cfg = this.layout;
@@ -266,37 +283,33 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 
     var stackNum = this.tracks[i].stackNum;
     //    console.log(visStart, visEnd);
-    var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
+    var visItems = track.items.filter(function(d) {
+	    if(typeof d.feature !== 'undefined' && d.feature !== 'gene') {
+		if(track.featureThreshold < visRange) {
+		    return false;
+		}
+	    }
+	    return d.start < visEnd && d.end > visStart;
+	});
 
     //    console.log(track.items);
 
     var rects = this.itemRects[i].selectAll("g")
     .data(visItems, function(d) { return d.id; })
 	.attr("transform", function(d,i) { 
-	    if(d.strand == -1) {
-		ystack = stackNum;
-	    } else if(d.strand == 1) {
-		ystack = stackNum -1;
-	    } else {
-		ystack = stackNum - 0.3;
-	    }
-	    return "translate(" + x1(d.start) + ',' +  (y1(ystack) + 10) + ")"; });
+	    return "translate(" + x1(d.start) + ',' +  d.yshift + ")"; });
 
+    // Process the changed/moved rects
     rects.selectAll("rect")
     .each(function (d) { d.width = x1(d.end + 1) - x1(d.start); })
-    //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width;})
+    // Yes we really don't need to set the class here again
+    // except to deal with the _zoom class when zooming
+    // in and out
     .attr("class", function(d) {
-	if(d.strand == -1) {
-	    suffix = 'neg';
-	} else if(d.strand == 1) {
-	    suffix = 'pos';
-	} else {
-	    suffix = 'none';
-	}
+	return track.trackName + '_' + d.suffix + ' ' + ((d.width > 5) ? (track.trackName + '_' + d.suffix + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
 
-	return track.trackName + '_' + suffix + ' ' + ((d.width > 5) ? (track.trackName + '_' + suffix + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
-
+    // Process the text for changed/moved rects
     rects.selectAll("text")
     .attr("dx", "2px")
     .attr("dy", "0.94em")
@@ -304,56 +317,62 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    var bb = this.getBBox();
 	    var slice_length = x1(d.end) - x1(d.start) - 2; // -2 to offset the dx above
 	    d.visible = (slice_length > bb.width);
-	    //	    console.log(d);
-	    //	    console.log(slice_length);
-	    //	    console.log(bb.width);
-	    //	    console.log(d.visible);
 	})
     .attr("class", function(d) {
-	if(d.strand == -1) {
-	    suffix = 'neg';
-	} else if(d.strand == 1) {
-	    suffix = 'pos';
-	} else {
-	    suffix = 'none';
-	}
-	return track.trackName + '_text ' + track.trackName + '_' + suffix + '_text ' + (d.visible ? '' : "linear_hidden " ) + ('undefined' !== typeof d.extraclass ? d.extraclass : ''); });
+	return track.trackName + '_text ' + track.trackName + '_' + d.suffix + '_text ' + (d.visible ? '' : "linear_hidden " ) + ('undefined' !== typeof d.extraclass ? d.extraclass : ''); });
 
     var entering_rects = rects.enter().append("g")
     .attr("transform", function(d,i) {
 	    if(d.strand == -1) {
 		ystack = stackNum;
+		d.suffix = 'neg';
 	    } else if(d.strand == "1") {
 		ystack = stackNum -1;
+		d.suffix = 'pos';
 	    } else {
 		ystack = stackNum - 0.3;
+		d.suffix = 'none';
 	    }
-	    return "translate(" + x1(d.start) + ',' +  (y1(ystack) + 10) + ")"; })
+	    var shift_gene = 0;
+	    if(typeof d.feature !== 'undefined' && d.feature == "terminator") {
+		ystack = ystack - 0.5;
+	    } else if (track.trackFeatures == 'complex' && d.strand == "1") {
+		    var shift_gene = y1(1) * .2;
+
+	    }
+	    d.yshift = y1(ystack) + 10 + shift_gene;
+	    return "translate(" + x1(d.start) + ',' +  d.yshift + ")"; })
+    //	    return "translate(" + x1(d.start) + ',' +  (y1(ystack) + 10 + shift_gene) + ")"; })
     .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
     .attr("class", function(d) {
-	if(d.strand == -1) {
-	    suffix = 'neg';
-	} else if(d.strand == 1) {
-	    suffix = 'pos';
-	} else {
-	    suffix = 'none';
-	}
-	return track.trackName + '_' + suffix + '_group'; });
-	    
-    entering_rects.append("rect")
-    .each(function (d) { d.width = x1(d.end) - x1(d.start); })
-    .attr("class", function(d) {
-	if(d.strand == -1) {
-	    suffix = 'neg';
-	} else if(d.strand == 1) {
-	    suffix = 'pos';
-	} else {
-	    suffix = 'none';
-	}
+	return track.trackName + '_' + d.suffix + '_group'; })//;
+	   
+    //        entering_rects
+    .each(function(d) {
+	    d.width = x1(d.end) - x1(d.start);
 
-	return track.trackName + '_' + suffix + ' ' + ((d.width > 5) ? (track.trackName + '_' + suffix + '_zoomed') : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
-    .attr("width", function(d) {return d.width;})
-	.attr("height", function(d) {return (d.strand == 0 ? .4 : .9) * y1(1);})
+	    if(typeof d.feature !== 'undefined' && d.feature == "terminator") {
+		if(d.strand == 1) {
+		    lollipop = "#lollipop_strand_pos";
+		} else {
+		    lollipop = "#lollipop_strand_neg";
+		}
+		d3.select(this).append("use").attr("xlink:href", lollipop);
+	    } else {
+		d3.select(this)
+		.append("rect")
+		.attr("class", function(d) {
+
+			return track.trackName + '_' + d.suffix + ' ' + ((d.width > 5) ? (track.trackName + '_' + d.suffix + '_zoomed') : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
+		.attr("width", function(d) {return d.width;})
+		.attr("height", function(d) {
+			if(track.trackFeatures == 'complex') { 
+			    var scale_factor = 0.77;
+			} else {
+			    var scale_factor = 1;
+			}
+			return (d.strand == 0 ? .4 : .9) * scale_factor * y1(1);
+		    })
     .on("click", function(d,i) {
 	    if (d3.event.defaultPrevented) return; // click suppressed
 	    if('undefined' !== typeof track.linear_mouseclick) {
@@ -390,29 +409,25 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 	    }	
 	});
 
+	    } //else
+	});
+
     if(('undefined' !== typeof track.showLabels) && typeof track.showLabels) {
-	entering_rects.append("text")
-	    .text(function(d) {return d.name;})
-	    .attr("dx", "2px")
-	    .attr("dy", "1em")
-	    .each(function (d) {
-		    var bb = this.getBBox();
-		    var slice_length = x1(d.end - d.start);
-		    d.visible = (slice_length > bb.width);
-		    //		    console.log(d);
-		    //		    console.log(slice_length);
-		    //		    console.log(bb.width);
-		    //		    console.log(d.visible);
-		})
-	    .attr("class", function(d) {
-		if(d.strand == -1) {
-		    suffix = 'neg';
-		} else if(d.strand == 1) {
-		    suffix = 'pos';
-		} else {
-		    suffix = 'none';
+	entering_rects.each(function(d) {
+		if(typeof d.feature == 'undefined' || d.feature == 'gene') {
+		    d3.select(this).append("text")
+			.text(function(d) {return d.name;})
+			.attr("dx", "2px")
+			.attr("dy", "1em")
+			.each(function (d) {
+				var bb = this.getBBox();
+				var slice_length = x1(d.end - d.start);
+				d.visible = (slice_length > bb.width);
+			    })
+			.attr("class", function(d) {
+				return track.trackName + '_text ' +  track.trackName + '_' + d.suffix + '_text ' + (d.visible ? null : "linear_hidden"  ); });
 		}
-		return track.trackName + '_text ' +  track.trackName + '_' + suffix + '_text ' + (d.visible ? null : "linear_hidden"  ); });
+	    });
     }
 
     rects.exit().remove();
@@ -421,6 +436,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 genomeTrack.prototype.displayTrack = function(track, i) {
     var visStart = this.visStart,
     visEnd = this.visEnd,
+    visRange = visEnd - visStart,
     x1 = this.x1,
     y1 = this.y1;
     var cfg = this.layout;
@@ -434,20 +450,31 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     }
 
     var stackNum = this.tracks[i].stackNum;
-    //    console.log(visStart, visEnd);
-    var visItems = track.items.filter(function(d) {return d.start < visEnd && d.end > visStart;});
+    //    console.log(visStart, visEnd, visRange);
+    var visItems = track.items.filter(function(d) {
+	    if(typeof d.feature !== 'undefined' && d.feature !== 'gene') {
+		if(track.featureThreshold < visRange) {
+		    return false;
+		}
+	    }
+	    return d.start < visEnd && d.end > visStart;}
+	);
 
     //    console.log(track.items);
 
     var rects = this.itemRects[i].selectAll("g")
     .data(visItems, function(d) { return d.id; })
-    .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' + (y1(stackNum) + 10)  + ")"; });
+    .attr("transform", function(d,i) { 
+	    return "translate(" + x1(d.start) + ',' + d.yshift  + ")"; 
+	});
 
 
     this.itemRects[i].selectAll("rect")
     .each(function (d) { d.width = x1(d.end) - x1(d.start); })
-    //    .attr("x", function(d) {return x1(d.start);})
     .attr("width", function(d) {return d.width; })
+    // Yes we really don't need to set the class here again
+    // except to deal with the _zoom class when zooming
+    // in and out
     .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');});
 
     rects.selectAll("text")
@@ -457,75 +484,98 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    var bb = this.getBBox();
 	    var slice_length = x1(d.end) - x1(d.start) - 2; // -2 to offset the dx above
 	    d.visible = (slice_length > bb.width);
-	    //	    console.log(d);
-	    //	    console.log(slice_length);
-	    //	    console.log(bb.width);
-	    //	    console.log(d.visible);
 	})
     .attr("class", function(d) {return track.trackName + '_text ' + (d.visible ? null : "linear_hidden" ); });
 
     var entering_rects = rects.enter().append("g")
-    .attr("transform", function(d,i) { return "translate(" + x1(d.start) + ',' + (y1(stackNum) + 10)  + ")"; })
-    .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
-    .attr("class", function(d) {return track.trackName + '_group'; });
+    .attr("transform", function(d,i) { 
+	    ystack = stackNum;
+	    shift_gene = 0;
+	    if(typeof d.feature !== 'undefined' && d.feature == "terminator") {
+		ystack = ystack - 0.6;
+	    } else if (track.trackFeatures == 'complex') {
+		    var shift_gene = y1(1) * .175;
 
-    entering_rects.append("rect")
-    .each(function (d) { d.width = x1(d.end) - x1(d.start); })
-    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
-    .attr("width", function(d) {return d.width; })
-    .attr("height", function(d) {return .8 * y1(1);})
-    .on("click", function(d,i) {
-	    if (d3.event.defaultPrevented) return; // click suppressed
-	    if('undefined' !== typeof track.linear_mouseclick) {
-		var fn = window[track.linear_mouseclick];
-		if('object' ==  typeof fn) {
-		    return fn.onclick(track.trackName, d, cfg.plotid);
-		} else if('function' == typeof fn) {
-		    return fn(track.trackName, d, cfg.plotid);
-		}
-	    } else {
-		null;
 	    }
-	})
-    .on('mouseover', function(d) { 
-	    tip.show(d);
-	    if('undefined' !== typeof track.linear_mouseover) {
-		var fn = window[track.linear_mouseover];
-		if('object' ==  typeof fn) {
-		    return fn.mouseover(track.trackName, d, cfg.plotid);
-		} else if('function' == typeof fn) {
-		    return fn(track.trackName, d, cfg.plotid);
-		}
-	    }	
-	})
-    .on('mouseout', function(d) { 
-	    tip.hide(d);
-	    if('undefined' !== typeof track.linear_mouseout) {
-		var fn = window[track.linear_mouseout];
-		if('object' ==  typeof fn) {
-		    return fn.mouseout(track.trackName, d, cfg.plotid);
-		} else if('function' == typeof fn) {
-		    return fn(track.trackName, d, cfg.plotid);
-		}
-	    }	
-	});
 
-    if('undefined' !== typeof track.showLabels) {
-	entering_rects.append("text")
-	    .text(function(d) {return d.name;})
-	    .attr("dx", "2px")
-	    .attr("dy", "1em")
-	    .each(function (d) {
-		    var bb = this.getBBox();
-		    var slice_length = x1(d.end) - x1(d.start) -2 ; // -2 to offset the dx above
-		    d.visible = (slice_length > bb.width);
-		    //		    console.log(d);
-		    //		    console.log(slice_length);
-		    //		    console.log(bb.width);
-		    //		    console.log(d.visible);
+	    d.yshift = y1(ystack) + 10 + shift_gene;
+	    return "translate(" + x1(d.start) + ',' + d.yshift  + ")"; 
+	})
+    .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
+    .attr("class", function(d) {return track.trackName + '_group'; })//;
+
+    //    entering_rects
+    .each(function (d) { 
+	    d.width = x1(d.end) - x1(d.start); 
+
+	    if(typeof d.feature !== 'undefined' && d.feature == "terminator") {
+		d3.select(this).append("use").attr("xlink:href", "#lollipop");
+	    } else {
+
+	    d3.select(this).append("rect")
+
+	    .attr("class", function(d) {return track.trackName + ' ' + ((d.width > 5) ? (track.trackName + '_zoomed') : '' ) + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');})
+	    .attr("width", function(d) {return d.width; })
+	    .attr("height", function(d) {
+		    if(track.trackFeatures == 'complex') {
+			var scale_factor = 0.77;
+		    } else {
+			var scale_factor = 1;
+		    }
+
+		    return .8 * scale_factor * y1(1);
 		})
-	    .attr("class", function(d) {return track.trackName + '_text ' + (d.visible ? null : "linear_hidden" ); });
-    }
+	    .on("click", function(d,i) {
+		    if (d3.event.defaultPrevented) return; // click suppressed
+		    if('undefined' !== typeof track.linear_mouseclick) {
+			var fn = window[track.linear_mouseclick];
+			if('object' ==  typeof fn) {
+			    return fn.onclick(track.trackName, d, cfg.plotid);
+			} else if('function' == typeof fn) {
+			    return fn(track.trackName, d, cfg.plotid);
+			}
+		    } else {
+			null;
+		    }
+		})
+	    .on('mouseover', function(d) { 
+		    tip.show(d);
+		    if('undefined' !== typeof track.linear_mouseover) {
+			var fn = window[track.linear_mouseover];
+			if('object' ==  typeof fn) {
+			    return fn.mouseover(track.trackName, d, cfg.plotid);
+			} else if('function' == typeof fn) {
+			    return fn(track.trackName, d, cfg.plotid);
+			}
+		    }	
+		})
+	    .on('mouseout', function(d) { 
+		    tip.hide(d);
+		    if('undefined' !== typeof track.linear_mouseout) {
+			var fn = window[track.linear_mouseout];
+			if('object' ==  typeof fn) {
+			    return fn.mouseout(track.trackName, d, cfg.plotid);
+			} else if('function' == typeof fn) {
+			    return fn(track.trackName, d, cfg.plotid);
+			}
+		    }	
+		})
+
+	    if('undefined' !== typeof track.showLabels) {
+		//		entering_rects
+		d3.select(this).append("text")
+		.text(function(d) {return d.name;})
+		.attr("dx", "2px")
+		.attr("dy", "1em")
+		.each(function (d) {
+			var bb = this.getBBox();
+			var slice_length = x1(d.end) - x1(d.start) -2 ; // -2 to offset the dx above
+			d.visible = (slice_length > bb.width);
+		    })
+		.attr("class", function(d) {return track.trackName + '_text ' + (d.visible ? null : "linear_hidden" ); });
+	    }
+	    }// else
+	});
 
 
     rects.exit().remove();
@@ -905,4 +955,199 @@ genomeTrack.prototype.dataURLtoBlob = function(dataURL) {
   }
   // Return our Blob object
   return new Blob([new Uint8Array(array)], {type: 'image/png'});
+}
+
+genomeTrack.prototype.drawFeatures = function() {
+    var x1 = this.x1;
+    var y1 = this.y1;
+
+    // Quick debugging variable to show click rects
+    var opacity = 0;
+
+    // Lollipop for terminator glyph (stranded, positive)
+    var lollipop_strand_pos = this.defs.append("g").attr("id", "lollipop_strand_pos");
+    lollipop_strand_pos.append("path")
+	.attr("class", "lollipophead")
+	.attr("d", function() {
+		arc = "m 0,";
+		arc += y1(1) * 0.69;
+		arc += " a ";
+		arc += y1(1) * 0.13;
+		arc += ",";
+		arc += y1(1) * 0.13;
+		arc += " 0 1 1 ";
+		arc += y1(1) * 0.09;
+		arc += ",0";
+		console.log(arc);
+		return arc;
+		//		"m 0,60 a 12,12 0 1 1 8,0"
+	    });
+    lollipop_strand_pos.append("path")
+	.attr("class", "lollipopstemend")
+	.attr("d", function() {
+		line = "m " + (y1(1) * 0.09) + ",";
+		line += y1(1) * 0.69;
+		line += " l 0,";
+		line += y1(1) * 0.70;
+		console.log("line " + line);
+		return line;
+		//		"m 8,60 l 0,65"
+		    });
+    lollipop_strand_pos.append("path")
+	.attr("class", "lollipopstemstart")
+	.attr("d", function() {
+		line = "m 0,";
+		line += y1(1) * 0.69;
+		line += " l 0,";
+		line += y1(1) * 0.70;
+		console.log(line);
+		return line;
+		//		"m 0,60 l 0,65"
+	    });
+    lollipop_strand_pos.append("rect")
+	.attr("transform", function () {
+		return "translate(-" + (y1(1) * 0.1) + "," + (y1(1) * 0.43) + ")";
+	    })
+	.attr("width", function() { 
+		return y1(1) * 0.3;
+	    })
+	.attr("height", function() { 
+		return y1(1) * 0.26;
+	    })
+	.attr("fill-opacity", opacity);
+    lollipop_strand_pos.append("rect")
+        .attr("transform", function() {
+		return "translate(0, " + (y1(1) * 0.68) + ")";
+		//		"translate(0,60)"
+		    })
+	.attr("width", 8)
+	.attr("height", function() {
+		return  y1(1) * 0.72;
+	    })
+	.attr("fill-opacity", opacity);
+
+    // Lollipop for terminator glyph (stranded, negative)
+    var lollipop_strand_neg = this.defs.append("g").attr("id", "lollipop_strand_neg");
+    lollipop_strand_neg.append("path")
+	.attr("class", "lollipophead")
+	.attr("d", function() {
+		arc = "m 0,";
+		arc += y1(1) * 1.20;
+		arc += " a ";
+		arc += y1(1) * 0.13;
+		arc += ",";
+		arc += y1(1) * 0.13;
+		arc += " 0 1 0 ";
+		arc += y1(1) * 0.09;
+		arc += ",0";
+		console.log(arc);
+		return arc;
+		//		"m 0,60 a 12,12 0 1 1 8,0"
+	    });
+    lollipop_strand_neg.append("path")
+	.attr("class", "lollipopstemstart")
+	.attr("d", function() {
+		line = "m " + (y1(1) * 0.09) + ",";
+		line += y1(1) * 1.20;
+		line += " l 0,";
+		line += y1(1) * 0.71 * -1;
+		console.log(line);
+		return line;
+		//		"m 8,60 l 0,65"
+		    });
+    lollipop_strand_neg.append("path")
+	.attr("class", "lollipopstemend")
+	.attr("d", function() {
+		line = "m 0,";
+		line += y1(1) * 1.20;
+		line += " l 0,";
+		line += y1(1) * 0.71 * -1;
+		console.log(line);
+		return line;
+		//		"m 0,60 l 0,65"
+	    });
+    lollipop_strand_neg.append("rect")
+	.attr("transform", function () {
+		return "translate(-" + (y1(1) * 0.1) + "," + (y1(1) * 1.20) + ")";
+	    })
+	.attr("width", function() { 
+		return y1(1) * 0.3;
+	    })
+	.attr("height", function() { 
+		return y1(1) * 0.26;
+	    })
+	.attr("fill-opacity", opacity);
+    lollipop_strand_neg.append("rect")
+	.attr("transform", function() {
+		return "translate(0, " + (y1(1) * 0.50) + ")";
+		//		"translate(0,60)"
+		    })
+	.attr("width", 8)
+	.attr("height", function() {
+		return  y1(1) * 0.71;
+	    })
+	.attr("fill-opacity", opacity);
+
+    // Lollipop for terminator glyph (unstranded)
+    var lollipop = this.defs.append("g").attr("id", "lollipop");
+    lollipop.append("path")
+	.attr("class", "lollipophead")
+	.attr("d", function() {
+		arc = "m 0,";
+		arc += y1(1) * 0.77;
+		arc += " a ";
+		arc += y1(1) * 0.13;
+		arc += ",";
+		arc += y1(1) * 0.13;
+		arc += " 0 1 1 ";
+		arc += y1(1) * 0.09;
+		arc += ",0";
+		console.log(arc);
+		return arc;
+		//		"m 0,60 a 12,12 0 1 1 8,0"
+	    });
+    lollipop.append("path")
+	.attr("class", "lollipopstemend")
+	.attr("d", function() {
+		line = "m " + (y1(1) * 0.09) + ",";
+		line += y1(1) * 0.77;
+		line += " l 0,";
+		line += y1(1) * 0.62;
+		console.log(line);
+		return line;
+		//		"m 8,60 l 0,65"
+		    });
+    lollipop.append("path")
+	.attr("class", "lollipopstemstart")
+	.attr("d", function() {
+		line = "m 0,";
+		line += y1(1) * 0.77;
+		line += " l 0,";
+		line += y1(1) * 0.62;
+		console.log(line);
+		return line;
+		//		"m 0,60 l 0,65"
+	    });
+    lollipop.append("rect")
+	.attr("transform", function () {
+		return "translate(-" + (y1(1) * 0.1) + "," + (y1(1) * 0.51) + ")";
+	    })
+	.attr("width", function() { 
+		return y1(1) * 0.3;
+	    })
+	.attr("height", function() { 
+		return y1(1) * 0.26;
+	    })
+	.attr("fill-opacity", opacity);
+    lollipop.append("rect")
+        .attr("transform", function() {
+		return "translate(0, " + (y1(1) * 0.76) + ")";
+		//		"translate(0,60)"
+		    })
+	.attr("width", 8)
+	.attr("height", function() {
+		return  y1(1) * 0.64;
+	    })
+	.attr("fill-opacity", opacity);
+
 }

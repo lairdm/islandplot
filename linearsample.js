@@ -1,5 +1,7 @@
 var linearlayout = {genomesize: 6264404,
-	      container: "#linearchart"};
+		    height: 300,
+		    container: "#linearchart"
+		    };
 
 var contextLayout = {genomesize: 6264404,
 	      container: "#brush"};
