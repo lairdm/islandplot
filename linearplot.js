@@ -172,6 +172,53 @@ function genomeTrack(layout,tracks) {
 
 	 if("undefined" == typeof this.tracks[i].trackFeatures) {
 	     this.tracks[i].trackFeatures = "simple";
+	 } else if(this.tracks[i].trackFeatures == "complex") {
+	     // We need to pre-calculate the stacking order for
+	     // all arrow type features
+
+	     // 0.77 * 0.9
+	     this.tracks[i].baseheight = (this.y1(1) * 0.693)
+	     var inframe = [];
+	     tracks[i].maxStackOrder = 1;
+	     for(var j = 0; j < this.tracks[i].items.length; j++) {
+		 // If it's the arrow type we're looking for
+		 if("undefined" !== typeof tracks[i].items[j].feature && tracks[i].items[j].feature == "arrow") {
+		     item = tracks[i].items[j];
+		     // Is there anything else still in frame we need to check?
+
+		     tracks[i].items[j].stackOrder = 1;
+		     // Next one we encoutner will be 2
+		     var curr_stackorder = 2;
+		     // Go backwards through the possible inframe elements
+		     // and increase their stack order if needed
+		     for(var k = inframe.length - 1; k >= 0; k--) {
+			 curr_k = inframe[k];
+			 console.log(this.tracks[i].items[curr_k]);
+			 if(this.tracks[i].items[curr_k].end >= item.start) {
+			     // If the current item in the possible stack
+			     // items is overlapping...
+			     if(this.tracks[i].items[curr_k].stackOrder <= curr_stackorder) {
+				 // If the examined item is below or
+				 // equal to the current stack order
+				 this.tracks[i].items[curr_k].stackOrder = curr_stackorder;
+				 curr_stackorder++;
+			     }
+			     // This takes care of ignoring items that
+			     // are already well above the current stack order
+			     
+			 } else {
+			     // Or if it no longer overlaps, remove it
+			     inframe.splice(k, 1);
+			 }
+		     }
+
+		     // Push ourselves on the inframe so the next
+		     // guy can check us out
+		     inframe.push(j);
+		     tracks[i].maxStackOrder = Math.max(tracks[i].maxStackOrder, curr_stackorder);
+		     // Save the maximum stackorder we've seen
+		 }
+	     }
 	 }
 
 	 if("undefined" == typeof this.tracks[i].featureThreshold) {
@@ -351,14 +398,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     .each(function(d) {
 	    d.width = x1(d.end) - x1(d.start);
 
-	    if(typeof d.feature !== 'undefined' && d.feature == "terminator") {
-		if(d.strand == 1) {
-		    lollipop = "#lollipop_strand_pos";
-		} else {
-		    lollipop = "#lollipop_strand_neg";
-		}
-		d3.select(this).append("use").attr("xlink:href", lollipop);
-	    } else {
+	    if (typeof d.feature === 'undefined' || d.feature == "gene") {
 		d3.select(this)
 		.append("rect")
 		.attr("class", function(d) {
@@ -408,6 +448,42 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 		}
 	    }	
 	});
+
+	    } else if(d.feature == "terminator") {
+		if(d.strand == 1) {
+		    lollipop = "#lollipop_strand_pos";
+		} else {
+		    lollipop = "#lollipop_strand_neg";
+		}
+		d3.select(this).append("use").attr("xlink:href", lollipop);
+
+	    } else if(d.feature == "arrow") {
+		if(d.strand == 1) {
+		    arrowhead = "#rightarrow";
+		} else {
+		    arrowhead = "#leftarrow";
+		}
+		arrowclass = track.trackName + '_arrow_' + d.suffix + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '');
+		arrowbase = d3.select(this)
+		
+		arrowbase.append("path")
+		.attr("class", arrowclass)
+		.attr("d", function(d) { 
+			// 0.77 * 0.9
+			
+			d.height = y1(0.23) * d.stackOrder / track.maxStackOrder;
+			console.log("height: " + d.height);
+			arrow = "m 0," + track.baseheight + "l 0,-" + (track.baseheight + d.height) + " " + d.width + ",0";
+			console.log("arrow " + arrow);
+			return arrow;
+		    })
+		.attr("fill-opacity", 0)
+		arrowbase.append("use").attr("xlink:href", arrowhead)
+		.attr("class", arrowclass)
+		.attr("transform", function(d) {
+			return "translate(" + d.width + ",-" + d.height + ")";
+		    });
+
 
 	    } //else
 	});
@@ -1091,7 +1167,7 @@ genomeTrack.prototype.drawFeatures = function() {
     // Lollipop for terminator glyph (unstranded)
     var lollipop = this.defs.append("g").attr("id", "lollipop");
     lollipop.append("path")
-	.attr("class", "lollipophead")
+        .attr("class", "lollipophead")
 	.attr("d", function() {
 		arc = "m 0,";
 		arc += y1(1) * 0.77;
@@ -1149,5 +1225,21 @@ genomeTrack.prototype.drawFeatures = function() {
 		return  y1(1) * 0.64;
 	    })
 	.attr("fill-opacity", opacity);
+
+    // Right arrow
+    var rightarrow = this.defs.append("g").attr("id", "rightarrow");
+    rightarrow.append("path")
+        .attr("class", "rightarrow")
+        .attr("d", function() {
+		return "m 0,0 l -4,4 m 0,-8 l 4,4";
+	    });
+
+    // Left arrow
+    var leftarrow = this.defs.append("g").attr("id", "leftarrow");
+    leftarrow.append("path")
+        .attr("class", "rightarrow")
+        .attr("d", function() {
+		return "m 0,0 l 4,4 m 0,-8 l -4,4";
+	    });
 
 }

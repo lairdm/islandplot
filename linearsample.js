@@ -1,5 +1,5 @@
 var linearlayout = {genomesize: 6264404,
-		    height: 300,
+		    height: 500,
 		    container: "#linearchart"
 		    };
 

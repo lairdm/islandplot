@@ -79,6 +79,11 @@
     stroke: red;
 }
 
+.track1_arrow_pos, .track1_arrow_neg {
+    stroke-width: 1;
+    stroke: black;
+}
+
 .track1_text {
     fill: white;
     font-weight: bold;
