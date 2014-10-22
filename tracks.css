@@ -79,7 +79,7 @@
     stroke: red;
 }
 
-.track1_arrow_pos, .track1_arrow_neg {
+.track1_arrow_pos, .track1_arrow_neg, .track3_arrow {
     stroke-width: 1;
     stroke: black;
 }
