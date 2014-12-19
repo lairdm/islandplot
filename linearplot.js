@@ -391,7 +391,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 
 	    d3.select(this).select("use")
 		.attr("transform", function(d) {
-			return "translate(" + headxtranslate + ",-" + d.headytranslate + ")";
+			return "translate(" + headxtranslate + "," + d.headytranslate + ")";
 		    });
 
 	});
@@ -491,13 +491,16 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 		    d.height = y1(0.23) - (d.stackOrder * track.increment);
 		    arrowhead = "#leftarrow";
 		    headxtranslate = 0;
-		    d.headytranslate = y1(0.23) - d.height + track.increment;
+		    d.headytranslate = track.baseheight + d.height;
+		    console.log(track.increment);
+		    console.log(d.headytranslate);
 		    arrowline = "m " + d.width + ",0 " + "l 0," + (track.baseheight + d.height) + " -" + d.width + ",0";
+		    console.log(arrowline);
 		} else {
 		    d.height = d.stackOrder * track.increment;
 		    arrowhead = "#rightarrow";
 		    headxtranslate = d.width;
-		    d.headytranslate = d.height;
+		    d.headytranslate = d.height * -1;
 		    arrowline = "m 0," + track.baseheight + "l 0,-" + (track.baseheight + d.height) + " " + d.width + ",0";
 
 		}
@@ -514,7 +517,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 		.attr("fill-opacity", 0)
 		arrowbase.append("use").attr("xlink:href", arrowhead)
 		.attr("transform", function(d) {
-			return "translate(" + headxtranslate + ",-" + d.headytranslate + ")";
+			return "translate(" + headxtranslate + "," + d.headytranslate + ")";
 		    })
 		.attr("class", arrowclass);
 
@@ -1312,7 +1315,8 @@ genomeTrack.prototype.drawFeatures = function() {
     leftarrow.append("path")
         .attr("class", "rightarrow")
         .attr("d", function() {
-		return "m 0," + y1(1) + " l 4,4 m 0,-8 l -4,4";
+		return "m 0,0 l 4,4 m 0,-8 l -4,4";
+		//		return "m 0," + y1(1) + " l 4,4 m 0,-8 l -4,4";
 	    });
 
 }
