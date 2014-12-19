@@ -602,6 +602,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 
     this.itemRects[i].selectAll(".arrow")
     .each(function(d) {
+	console.log(d);
 	    d.width = x1(d.end + 1) - x1(d.start);
 
 	    d3.select(this).select("path")
@@ -631,7 +632,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 	    return "translate(" + x1(d.start) + ',' + d.yshift  + ")"; 
 	})
     .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
-    .attr("class", function(d) {return track.trackName + '_group'; })//;
+    .attr("class", function(d) {return track.trackName + '_group ' + (typeof d.feature === 'undefined' ? 'gene' : d.feature); })//;
 
     //    entering_rects
     .each(function (d) { 
