@@ -46,17 +46,39 @@ function circularTrack(layout,tracks) {
     this.xScale = d3.scale.linear()
 	.range([0,this.layout.radians])
 	.domain([0, layout.genomesize]);
+    var xScale = this.xScale;
     d3.select(layout.container).select("svg").remove();
 
     this.container = d3.select(layout.container)
 	.append("svg")	
 	.attr("id", function() { return layout.container.slice(1) + "_svg"; })
 	.attr("width", this.layout.w+this.layout.ExtraWidthX)
-	.attr("height", this.layout.h+this.layout.ExtraWidthY)
-    
+	.attr("height", this.layout.h+this.layout.ExtraWidthY); 
+   
     this.g = this.container
 	.append("g")
+	.attr("id", function() { return layout.container.slice(1) + "_g"; })
 	.attr("transform", "translate(" + this.layout.TranslateX + "," + this.layout.TranslateY + ")");
+
+    // Add the double click functionality, but we needed to define g first
+    this.container.on("dblclick", function(d,i) {
+	    if('undefined' !== typeof this.layout.dblclick) {
+		var node = this.g.node();
+		var curBP = calcRadBPfromXY((d3.mouse(node)[0] - (this.layout.w/2)),
+						  -(d3.mouse(node)[1] - (this.layout.h/2)),
+						  xScale)[1];
+		var fn = window[this.layout.dblclick];
+
+		if('object' ==  typeof fn) {
+		    return fn.ondblclick(this.layout.plotid, curBP);
+		} else if('function' == typeof fn) {
+		    return fn(this.layout.plotid, curBP);
+		}
+
+	    } else {
+		null;
+	    }
+	}.bind(this));
 
     this.defs = this.g.append("defs");
 
@@ -223,7 +245,7 @@ circularTrack.prototype.drawAxis = function() {
 
     this.axis_container = this.g
 	.append("g")
-	.attr("id", "axis_container")
+	.attr("id", "axis_container");
 
     var axis = this.axis_container.selectAll(".axis")
     .data(d3.range(0,cfg.genomesize, cfg.spacing))
@@ -309,6 +331,7 @@ circularTrack.prototype.drawCircle = function(name, radius, line_stroke, animate
     if('undefined' !== typeof animate) {
 	this.moveCircle(name, radius);
     }
+
 }
 
 // Change the radius of an inscribed circle
@@ -490,7 +513,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    if('undefined' !== typeof track.mouseclick) {
 		var fn = window[track.mouseclick];
 		if('object' ==  typeof fn) {
-		    console.log(fn);
+//		    console.log(fn);
 		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
@@ -1430,6 +1453,7 @@ function calcRadBPfromXY (x,y,xScale) {
 	// II & III quadrant
 	rad = rad + Math.PI;
     }
+
     return [rad,Math.floor(xScale.invert(rad))];
 }
 
