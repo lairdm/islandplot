@@ -1064,6 +1064,14 @@ genomeTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, for
     var clonedSVG = containertag.cloneNode(true);
     var svg = clonedSVG.getElementsByTagName("svg")[0];
 
+    // Remove any hidden elements such as text that's not being shown
+    var tags = svg.getElementsByClassName("linear_hidden")
+    for(var i=tags.length-1; i>=0; i--) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+//        }
+    }
+
     // We need to resize the svg with the new canvas size
     svg.removeAttribute('width');
     svg.removeAttribute('height');
@@ -1073,7 +1081,7 @@ genomeTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, for
     // Update first g tag with the scaling
     g = svg.getElementsByTagName("g")[0];
     transform = g.getAttribute("transform");
-    g.setAttribute("transform", transform + " scale(" + scaling + ")");
+//    g.setAttribute("transform", transform + " scale(" + scaling + ")");
 
     // Append the stylehsheet to the cloned svg element
     // so when we export it the style are inline and 

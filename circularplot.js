@@ -791,7 +791,7 @@ circularTrack.prototype.createBrush = function() {
     this.brush = g.insert("path", "defs")
     .attr("d", this.brushArc)
     .attr("id", "polarbrush_" + cfg.containerid)
-    .attr("class", "polarbrush")
+    .attr("class", "polarbrush circularbrush")
     .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
 
     var dragStart = d3.behavior.drag()
@@ -857,7 +857,7 @@ circularTrack.prototype.createBrush = function() {
     this.endBrushObj = g.append("circle")
     .attr({
 	    id: 'brushEnd_' + cfg.containerid,
-	    class: 'brushEnd',
+	    class: 'brushEnd circularbrush',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
 		r: 5,
@@ -867,7 +867,7 @@ circularTrack.prototype.createBrush = function() {
     this.startBrushObj = g.append("circle")
     .attr({
 	    id: 'brushStart_' + cfg.containerid,
-	    class: 'brushStart',
+	    class: 'brushStart circularbrush',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
 		r: 5,
@@ -1020,11 +1020,28 @@ circularTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, f
     var clonedSVG = containertag.cloneNode(true);
     var svg = clonedSVG.getElementsByTagName("svg")[0];
 
+    // Remove drag-resize shadow element
     var tags = svg.getElementsByClassName("dragbar-shadow")
     for(var i=0; i<tags.length; i++) {
 	if(tags[i].getAttributeNS(null, "name") === name) {
 	    tags[i].parentNode.removeChild(tags[i]);
         }
+    }
+
+    // Remove the brush if it's on the chart
+    var tags = svg.getElementsByClassName("circularbrush")
+    for(var i=tags.length-1; i>=0; i--) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+//        }
+    }
+
+    // Remove the move croshairs if on the chart
+    var tags = svg.getElementsByClassName("move_circularchart")
+    for(var i=tags.length-1; i>=0; i--) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+//        }
     }
 
     // We need to resize the svg with the new canvas size
