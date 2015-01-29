@@ -46,17 +46,39 @@ function circularTrack(layout,tracks) {
     this.xScale = d3.scale.linear()
 	.range([0,this.layout.radians])
 	.domain([0, layout.genomesize]);
+    var xScale = this.xScale;
     d3.select(layout.container).select("svg").remove();
 
     this.container = d3.select(layout.container)
 	.append("svg")	
 	.attr("id", function() { return layout.container.slice(1) + "_svg"; })
 	.attr("width", this.layout.w+this.layout.ExtraWidthX)
-	.attr("height", this.layout.h+this.layout.ExtraWidthY)
-    
+	.attr("height", this.layout.h+this.layout.ExtraWidthY); 
+   
     this.g = this.container
 	.append("g")
+	.attr("id", function() { return layout.container.slice(1) + "_g"; })
 	.attr("transform", "translate(" + this.layout.TranslateX + "," + this.layout.TranslateY + ")");
+
+    // Add the double click functionality, but we needed to define g first
+    this.container.on("dblclick", function(d,i) {
+	    if('undefined' !== typeof this.layout.dblclick) {
+		var node = this.g.node();
+		var curBP = calcRadBPfromXY((d3.mouse(node)[0] - (this.layout.w/2)),
+						  -(d3.mouse(node)[1] - (this.layout.h/2)),
+						  xScale)[1];
+		var fn = window[this.layout.dblclick];
+
+		if('object' ==  typeof fn) {
+		    return fn.ondblclick(this.layout.plotid, curBP);
+		} else if('function' == typeof fn) {
+		    return fn(this.layout.plotid, curBP);
+		}
+
+	    } else {
+		null;
+	    }
+	}.bind(this));
 
     this.defs = this.g.append("defs");
 
@@ -145,6 +167,10 @@ function circularTrack(layout,tracks) {
 	    break;
 	case "glyph":
 	    this.findGlyphTypes(i);
+
+	    if('undefined' !== typeof this.tracks[i].hideTypes) {
+		this.maskGlyphTypes(i, this.tracks[i].hideTypes)
+	    }
 	    //	    this.tracks[i].container = 
 	    //	this.g.append("g")
 	    //	.attr("class", this.tracks[i].trackName + "_glyph_container")
@@ -223,7 +249,7 @@ circularTrack.prototype.drawAxis = function() {
 
     this.axis_container = this.g
 	.append("g")
-	.attr("id", "axis_container")
+	.attr("id", "axis_container");
 
     var axis = this.axis_container.selectAll(".axis")
     .data(d3.range(0,cfg.genomesize, cfg.spacing))
@@ -309,6 +335,7 @@ circularTrack.prototype.drawCircle = function(name, radius, line_stroke, animate
     if('undefined' !== typeof animate) {
 	this.moveCircle(name, radius);
     }
+
 }
 
 // Change the radius of an inscribed circle
@@ -490,7 +517,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    if('undefined' !== typeof track.mouseclick) {
 		var fn = window[track.mouseclick];
 		if('object' ==  typeof fn) {
-		    console.log(fn);
+//		    console.log(fn);
 		    return fn.onclick(track.trackName, d, cfg.plotid);
 		} else if('function' == typeof fn) {
 		    return fn(track.trackName, d, cfg.plotid);
@@ -663,7 +690,15 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     trackPath.transition()
     .duration(1000)
     .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
-		+ y(d,i) + ")" });    
+		+ y(d,i) + ")" })
+    .style("opacity", 1);    
+
+    trackPath.exit()
+    .transition()
+    .duration(1000)
+    .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
+    .style("opacity", 0)
+    .remove();
 
     trackPath.enter()
     .append('path')
@@ -676,14 +711,8 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     .duration(1000)
     .attr("transform", function(d,i) { return "translate(" + x(d,i) + ","
 				       + y(d,i) + ")" })
-    .style("opacity", 1)
+    .style("opacity", 1);
 
-    trackPath.exit()
-    .transition()
-    .duration(1000)
-    .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
-    .style("opacity", 0)
-    .remove()
 
 }
 
@@ -768,7 +797,7 @@ circularTrack.prototype.createBrush = function() {
     this.brush = g.insert("path", "defs")
     .attr("d", this.brushArc)
     .attr("id", "polarbrush_" + cfg.containerid)
-    .attr("class", "polarbrush")
+    .attr("class", "polarbrush circularbrush")
     .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
 
     var dragStart = d3.behavior.drag()
@@ -834,7 +863,7 @@ circularTrack.prototype.createBrush = function() {
     this.endBrushObj = g.append("circle")
     .attr({
 	    id: 'brushEnd_' + cfg.containerid,
-	    class: 'brushEnd',
+	    class: 'brushEnd circularbrush',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
 		r: 5,
@@ -844,7 +873,7 @@ circularTrack.prototype.createBrush = function() {
     this.startBrushObj = g.append("circle")
     .attr({
 	    id: 'brushStart_' + cfg.containerid,
-	    class: 'brushStart',
+	    class: 'brushStart circularbrush',
 		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
 		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
 		r: 5,
@@ -997,11 +1026,28 @@ circularTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, f
     var clonedSVG = containertag.cloneNode(true);
     var svg = clonedSVG.getElementsByTagName("svg")[0];
 
+    // Remove drag-resize shadow element
     var tags = svg.getElementsByClassName("dragbar-shadow")
     for(var i=0; i<tags.length; i++) {
 	if(tags[i].getAttributeNS(null, "name") === name) {
 	    tags[i].parentNode.removeChild(tags[i]);
         }
+    }
+
+    // Remove the brush if it's on the chart
+    var tags = svg.getElementsByClassName("circularbrush")
+    for(var i=tags.length-1; i>=0; i--) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+//        }
+    }
+
+    // Remove the move croshairs if on the chart
+    var tags = svg.getElementsByClassName("move_circularchart")
+    for(var i=tags.length-1; i>=0; i--) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+//        }
     }
 
     // We need to resize the svg with the new canvas size
@@ -1172,7 +1218,7 @@ circularTrack.prototype.hideTrack = function(name) {
 	return;
     }
 
-    // Is it already visible? Do nothing
+    // Is it already not visible? Do nothing
     if(! this.tracks[i].visible) {
 	return;
     }
@@ -1210,6 +1256,11 @@ circularTrack.prototype.hideGlyphTrackType = function(name, type) {
 	return;
     }
 
+    // Don't try to show if already visible
+    if(! this.isvisibleGlyphTrackType(name, type)) {
+	return;
+    }
+
     for(var j = 0; j < this.tracks[i].visTypes.length; j++) {
 	if(this.tracks[i].visTypes[j] == type) {
 	    this.tracks[i].visTypes.splice(j, 1);
@@ -1234,12 +1285,39 @@ circularTrack.prototype.showGlyphTrackType = function(name, type) {
 	return;
     }
 
+    // Don't try to show if already visible
+    if(this.isvisibleGlyphTrackType(name, type)) {
+	return;
+    }
+
     if(! this.tracks[i].visTypes.contains(type) ) {
 	this.tracks[i].visTypes.push(type);
     }
 
     this.drawGlyphTrack(i);
 
+}
+
+circularTrack.prototype.isvisibleGlyphTrackType = function(name, type) {
+    var i = this.findTrackbyName(name);
+
+    // We didn't find the track by that name
+    if(i < 0) {
+	return;
+    }
+
+    if(this.tracks[i].trackType !== "glyph") {
+	// Wrong track type, bail
+	return;
+    }
+
+    for(var j = 0; j < this.tracks[i].visTypes.length; j++) {
+	if(this.tracks[i].visTypes[j] == type) {
+	    return true;
+	}
+    }
+
+    return false;
 }
 
 circularTrack.prototype.dragresize = function() {
@@ -1291,8 +1369,6 @@ circularTrack.prototype.dragresize_end = function() {
 	.attr("class", "linear_hidden dragbar-shadow");
 
     this.resize(newSize);
-
-    this.redrawBrush(this.currentStart, this.currentEnd);
 
 }
 
@@ -1346,6 +1422,11 @@ circularTrack.prototype.resize = function(newWidth) {
 	.attr("width", newWidth+this.layout.ExtraWidthX)
 	.attr("height", newWidth+this.layout.ExtraWidthY)
 
+    this.redrawBrush(this.currentStart, this.currentEnd);
+
+    this.dragbar
+	.attr("transform", "translate(" + (newWidth+this.layout.ExtraWidthX-25) + "," +  (newWidth+this.layout.ExtraWidthY-25) + ")")
+
 }
 
 ////////////////////////////////////////////////
@@ -1383,6 +1464,16 @@ circularTrack.prototype.findGlyphTypes = function(i) {
     }
 
     this.tracks[i].visClasses = classes.join(' ');
+
+}
+
+circularTrack.prototype.maskGlyphTypes = function(i, types) {
+
+    for(var j = this.tracks[i].visTypes.length - 1; j >= 0; j--) {
+	if(types.contains(this.tracks[i].visTypes[j])) {
+	    this.tracks[i].visTypes.splice(j, 1);
+	}
+    }
 
 }
 
@@ -1430,6 +1521,7 @@ function calcRadBPfromXY (x,y,xScale) {
 	// II & III quadrant
 	rad = rad + Math.PI;
     }
+
     return [rad,Math.floor(xScale.invert(rad))];
 }
 

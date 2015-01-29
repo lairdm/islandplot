@@ -60,6 +60,8 @@ function genomeTrack(layout,tracks) {
 
     this.layout.plotid = layout.container.slice(1);
 
+    d3.select(layout.container).select("svg").remove();
+
     this.chart = d3.select(layout.container)
 	.append("svg")
 	.attr("id", function() { return layout.container.slice(1) + "_svg"; })
@@ -328,7 +330,7 @@ genomeTrack.prototype.displayStranded = function(track, i) {
     // on or off here rather than in the .on() call, we'll redirect the calls to
     // a dummy do-nothing object if we're not showing tips in this context.
     var tip = {show: function() {}, hide: function() {} };
-    if(('undefined' !== typeof track.showTooltip) && typeof track.showTooltip) {
+    if(('undefined' !== typeof track.showTooltip) && track.showTooltip) {
 	tip = this.tip;
     }
 
@@ -558,7 +560,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
     // on or off here rather than in the .on() call, we'll redirect the calls to
     // a dummy do-nothing object if we're not showing tips in this context.
     var tip = {show: function() {}, hide: function() {} };
-    if(('undefined' !== typeof track.showTooltip) && typeof track.showTooltip) {
+    if(('undefined' !== typeof track.showTooltip) && track.showTooltip) {
 	tip = this.tip;
     }
 
@@ -782,6 +784,14 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     	return;
     }
 
+    // Because of how the tooltip library binds to the SVG object we have to turn it
+    // on or off here rather than in the .on() call, we'll redirect the calls to
+    // a dummy do-nothing object if we're not showing tips in this context.
+    var tip = {show: function() {}, hide: function() {} };
+    if(('undefined' !== typeof track.showTooltip) && track.showTooltip) {
+	tip = this.tip;
+    }
+
     var items = track.items.filter(function(d) {return d.bp <= visEnd && d.bp >= visStart;});
 
     // When we move we need to recalculate the stacking order
@@ -831,6 +841,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    }
 	})
     .on('mouseover', function(d) { 
+	tip.show(d);
 	    if('undefined' !== typeof track.linear_mouseover) {
 		var fn = window[track.linear_mouseover];
 		if('object' ==  typeof fn) {
@@ -841,6 +852,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
 	    }	
 	})
     .on('mouseout', function(d) { 
+	tip.hide(d);
 	    if('undefined' !== typeof track.linear_mouseout) {
 		var fn = window[track.linear_mouseout];
 		if('object' ==  typeof fn) {
@@ -879,6 +891,10 @@ genomeTrack.prototype.update_finished = function(startbp, endbp) {
 genomeTrack.prototype.resize = function(newWidth) {
     this.layout.width = newWidth;
 
+    this.dragbar
+    .attr("transform", "translate(" + (newWidth -
+				       this.layout.right_margin) + "," + (this.dragbar_y_mid-15) + ")")
+
     this.layout.width_without_margins =
 	this.layout.width - this.layout.left_margin -
 	this.layout.right_margin;
@@ -903,9 +919,6 @@ genomeTrack.prototype.resize = function(newWidth) {
 
 genomeTrack.prototype.dragresize = function(d) {
     var newWidth = d3.event.x;
-    this.dragbar
-    .attr("transform", "translate(" + (newWidth -
-				       this.layout.right_margin) + "," + (this.dragbar_y_mid-15) + ")")
 
     //    console.log(this.layout.containerid);
     this.resize(newWidth);
@@ -1054,6 +1067,14 @@ genomeTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, for
     var clonedSVG = containertag.cloneNode(true);
     var svg = clonedSVG.getElementsByTagName("svg")[0];
 
+    // Remove any hidden elements such as text that's not being shown
+    var tags = svg.getElementsByClassName("linear_hidden")
+    for(var i=tags.length-1; i>=0; i--) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
+	    tags[i].parentNode.removeChild(tags[i]);
+//        }
+    }
+
     // We need to resize the svg with the new canvas size
     svg.removeAttribute('width');
     svg.removeAttribute('height');
@@ -1063,7 +1084,7 @@ genomeTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, for
     // Update first g tag with the scaling
     g = svg.getElementsByTagName("g")[0];
     transform = g.getAttribute("transform");
-    g.setAttribute("transform", transform + " scale(" + scaling + ")");
+//    g.setAttribute("transform", transform + " scale(" + scaling + ")");
 
     // Append the stylehsheet to the cloned svg element
     // so when we export it the style are inline and 

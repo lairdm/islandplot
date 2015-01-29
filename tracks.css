@@ -54,10 +54,10 @@
 }
 
 .track1_neg {
-    fill: darkolivegreen;
+    fill: #FFCC00;
     fill-opacity: .7;
-    stroke-width: 1;
-    stroke: #4c602a;
+    /*stroke-width: 1;
+    stroke: #4c602a;*/
 }
 
 .track1_none {
@@ -90,7 +90,7 @@
     font: 12px arial;
 }
 .track2_pos {
-    fill: slategray;
+    fill: #000099;
     fill-opacity: .7;
 }
 
@@ -100,7 +100,7 @@
 }
 
 .track2_neg {
-    fill: green;
+    fill: #006600;
     fill-opacity: .7;
 }
 
@@ -117,7 +117,7 @@
 }
 
 .track3 {
-    fill: red;
+    fill: #3399FF;
     fill-opacity: .7;
 }
 
@@ -133,15 +133,15 @@
 }
 
 .track4 {
-    stroke: blue;
+    stroke: black;
 }
 
 .track5_vfdb {
-    fill: blue;
+    fill: #663300;
 }
 
 .track5_adb {
-    fill: green;
+    fill: #FF9933;
 }
 
 .trackAxis .domain {
