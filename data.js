@@ -6114,19 +6114,20 @@ var tracks = [
 		linear_glyphSize: 20,
 		linear_height: 100,
 		linear_mouseclick: 'linearPopup',
+		showTooltip: true,
 		items: [
-			{id: 1, bp: 100, type: 'vfdb'},
-			{id: 2, bp: 50000, type: 'adb'},
-			{id: 3, bp: 51000, type: 'adb'},
-			{id: 4, bp: 52000, type: 'vfdb'},
-			{id: 5, bp: 53000, type: 'adb'},
-			{id: 6, bp: 54000, type: 'vfdb'},
-			{id: 7, bp: 55000, type: 'adb'},
-			{id: 8, bp: 56000, type: 'adb'},
-			{id: 9, bp: 156000, type: 'adb'},
-			{id: 10, bp: 256000, type: 'adb'},
-			{id: 11, bp: 3560000, type: 'adb'},
-			{id: 12, bp: 3560005, type: 'adb'}
+			{id: 1, bp: 100, type: 'vfdb', name: 'vfdb1'},
+			{id: 2, bp: 50000, type: 'adb', name: 'adb1'},
+			{id: 3, bp: 51000, type: 'adb', name: 'adb2'},
+			{id: 4, bp: 52000, type: 'vfdb', name: 'vfdb2'},
+			{id: 5, bp: 53000, type: 'adb', name: 'adb3'},
+			{id: 6, bp: 54000, type: 'vfdb', name: 'vfdb4'},
+			{id: 7, bp: 55000, type: 'adb', name: 'adb4'},
+			{id: 8, bp: 56000, type: 'adb', name: 'adb5'},
+			{id: 9, bp: 156000, type: 'adb', name: 'adb6'},
+			{id: 10, bp: 256000, type: 'adb', name: 'adb7'},
+			{id: 11, bp: 3560000, type: 'adb', name: 'db8'},
+			{id: 12, bp: 3560005, type: 'adb', name: 'adb9'}
 
 	           ]
 		      }

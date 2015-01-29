@@ -1,5 +1,6 @@
 var circularlayout = {genomesize: 6264404,
 		      container: "#circularchart",
+		      dblclick: "doubleClick",
         };
 
 function updateGC(cb) {
@@ -43,6 +44,12 @@ function islandPopup(d) {
 
 function islandPopupClear(d) {
     clearTimeout(timer);
+}
+
+function doubleClick(plotid, coords) {
+    console.log("double click!");
+    console.log(plotid);
+    console.log(coords);
 }
 
 var cTrack = new circularTrack(circularlayout, tracks);
