@@ -885,27 +885,31 @@ circularTrack.prototype.createBrush = function() {
 }
 
 circularTrack.prototype.doBrushCallback = function(startBP, endBP) {
+    var cfg = this.layout;
+
     if( Object.prototype.toString.call( this.callbackObj ) === '[object Array]' ) { 
 	for(var obj in this.callbackObj) {
 	    if(this.callbackObj.hasOwnProperty(obj)) {
-		this.callbackObj[obj].update(startBP, endBP);
+		this.callbackObj[obj].update(startBP, endBP, { plotid: cfg.plotid } );
 	    }
 	}
     } else {
-	this.callbackObj.update(startBP, endBP);
+	this.callbackObj.update(startBP, endBP, { plotid: cfg.plotid });
     }
 
 }
 
 circularTrack.prototype.doBrushFinishedCallback = function(startBP, endBP) {
+    var cfg = this.layout;
+
     if( Object.prototype.toString.call( this.callbackObj ) === '[object Array]' ) { 
 	for(var obj in this.callbackObj) {
 	    if(this.callbackObj.hasOwnProperty(obj)) {
-		this.callbackObj[obj].update_finished(startBP, endBP);
+		this.callbackObj[obj].update_finished(startBP, endBP, { plotid: cfg.plotid });
 	    }
 	}
     } else {
-	this.callbackObj.update_finished(startBP, endBP);
+	this.callbackObj.update_finished(startBP, endBP, { plotid: cfg.plotid });
     }
 
 }
@@ -978,11 +982,11 @@ circularTrack.prototype.showBrush = function() {
     .style("visibility", "visible");
 }
 
-circularTrack.prototype.update = function(startBP, endBP) {
+    circularTrack.prototype.update = function(startBP, endBP, params) {
     this.moveBrushbyBP(startBP, endBP);
 }
 
-circularTrack.prototype.update_finished = function(startBP, endBP) {
+	circularTrack.prototype.update_finished = function(startBP, endBP, params) {
     //    console.log("Thank you, got: " + startBP, endBP);
 }
 

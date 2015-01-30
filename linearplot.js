@@ -872,7 +872,7 @@ genomeTrack.prototype.displayAxis = function() {
     this.axisContainer.select(".xaxislinear").call(this.xAxis);
 }
 
-genomeTrack.prototype.update = function(startbp, endbp) {
+    genomeTrack.prototype.update = function(startbp, endbp, params) {
     //    console.log(startbp, endbp);
 
     this.visStart = startbp;
@@ -883,7 +883,7 @@ genomeTrack.prototype.update = function(startbp, endbp) {
     this.redraw();
 }
 
-genomeTrack.prototype.update_finished = function(startbp, endbp) {
+genomeTrack.prototype.update_finished = function(startbp, endbp, params) {
     //    console.log("Thank you, got: " + startbp, endbp);
 
 }
@@ -958,6 +958,7 @@ genomeTrack.prototype.redraw = function() {
 }
 
 genomeTrack.prototype.rescale = function() {
+    var cfg = this.layout;
 
     var reset_s = 0;
     if ((this.x1.domain()[1] - this.x1.domain()[0]) >= (this.genomesize - 0)) {
@@ -987,11 +988,11 @@ genomeTrack.prototype.rescale = function() {
 	if( Object.prototype.toString.call( this.callbackObj ) === '[object Array]' ) { 
 	    for(var obj in this.callbackObj) {
 		if(this.callbackObj.hasOwnProperty(obj)) {
-		    this.callbackObj[obj].update(this.x1.domain()[0], this.x1.domain()[1]);
+		    this.callbackObj[obj].update(this.x1.domain()[0], this.x1.domain()[1], { plotid: cfg.plotid } );
 		}
 	    }
 	} else {
-	    this.callbackObj.update(this.x1.domain()[0], this.x1.domain()[1]);
+	    this.callbackObj.update(this.x1.domain()[0], this.x1.domain()[1], { plotid: cfg.plotid } );
 	}
     }
 
@@ -1014,15 +1015,17 @@ genomeTrack.prototype.addBrushCallback = function(obj) {
 }
 
 genomeTrack.prototype.callBrushFinished = function() {
+    var cfg = this.layout;
+
     if('undefined' !== typeof this.callbackObj) {
 	if( Object.prototype.toString.call( this.callbackObj ) === '[object Array]' ) { 
 	    for(var obj in this.callbackObj) {
 		if(this.callbackObj.hasOwnProperty(obj)) {
-		    this.callbackObj[obj].update_finished(this.x1.domain()[0], this.x1.domain()[1]);
+		    this.callbackObj[obj].update_finished(this.x1.domain()[0], this.x1.domain()[1], { plotid: cfg.plotid } );
 		}
 	    }
 	} else {
-	    this.callbackObj.update_finished(this.x1.domain()[0], this.x1.domain()[1]);
+	    this.callbackObj.update_finished(this.x1.domain()[0], this.x1.domain()[1], { plotid: cfg.plotid } );
 	}
     }
 
