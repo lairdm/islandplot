@@ -143,6 +143,15 @@ function circularTrack(layout,tracks) {
     // Now we can start drawing the plots, first the basic axis...
     this.drawAxis();
 
+    this.tip = d3.tip()
+	.attr('class', 'd3-tip')
+	.offset([-10, 0])
+	.html(function(d) {
+		return "<strong>Name:</strong> <span style='color:red'>" + d.name + "</span>";
+	    });
+
+    this.container.call(this.tip);
+
     // Draw the plots
     for(var i=0; i < this.tracks.length; i++) {
 
@@ -482,6 +491,14 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     var cfg = this.layout;
     var track = this.tracks[i];
 
+    // Because of how the tooltip library binds to the SVG object we have to turn it
+    // on or off here rather than in the .on() call, we'll redirect the calls to
+    // a dummy do-nothing object if we're not showing tips in this context.
+    var tip = {show: function() {}, hide: function() {} };
+    if(('undefined' !== typeof track.showTooltip) && track.showTooltip) {
+	tip = this.tip;
+    }
+
     // The arc object which will be passed in to each
     // set of data
     var arc = d3.svg.arc()
@@ -511,7 +528,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .enter()
     .append("path")
     .attr("d", arc)
-    .attr("class", function(d) { return track.trackName + ('undefined' !== typeof d.strand ? '_' + (d.strand == 1 ? 'pos' : 'neg') : '') })
+    .attr("class", function(d) { return track.trackName + ('undefined' !== typeof d.strand ? '_' + (d.strand == 1 ? 'pos' : 'neg') : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '') })
     .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.mouseclick) {
@@ -528,6 +545,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    }
 	})
     .on("mouseover", function(d, i) {
+	    tip.show(d);
 	    if('undefined' !== typeof track.mouseover_callback) {
 		var fn = window[track.mouseover_callback];
 		if('object' ==  typeof fn) {
@@ -542,6 +560,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
 	    }
 	})
     .on("mouseout", function(d, i) {
+	    tip.hide(d);
     	    if('undefined' !== typeof track.mouseout_callback) {
 		var fn = window[track.mouseout_callback];
 		if('object' ==  typeof fn) {
