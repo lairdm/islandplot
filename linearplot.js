@@ -58,7 +58,9 @@ function genomeTrack(layout,tracks) {
 	.on("zoom", this.rescale.bind(this))
 	.on("zoomend", this.callBrushFinished.bind(this) );
 
-    this.layout.plotid = layout.container.slice(1);
+    if('undefined' == typeof layout.plotid) {
+	this.layout.plotid = layout.container.slice(1);
+    }
 
     d3.select(layout.container).select("svg").remove();
 
