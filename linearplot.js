@@ -234,6 +234,13 @@ function genomeTrack(layout,tracks) {
 	 }
 
 	switch(this.tracks[i].trackType) {
+	case "gap":
+	    this.itemRects[i] = this.main.append("g")
+		.attr("class", this.tracks[i].trackName)
+		.attr("width", this.layout.width_without_margins)
+		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
+	    this.displayGapTrack(this.tracks[i], i);
+	    break;
 	case "stranded":
 	    this.itemRects[i] = this.main.append("g")
 		.attr("class", this.tracks[i].trackName)
@@ -496,10 +503,10 @@ genomeTrack.prototype.displayStranded = function(track, i) {
 		    arrowhead = "#leftarrow";
 		    headxtranslate = 0;
 		    d.headytranslate = track.baseheight + d.height;
-		    console.log(track.increment);
-		    console.log(d.headytranslate);
+		    //		    console.log(track.increment);
+		    //		    console.log(d.headytranslate);
 		    arrowline = "m " + d.width + ",0 " + "l 0," + (track.baseheight + d.height) + " -" + d.width + ",0";
-		    console.log(arrowline);
+		    //		    console.log(arrowline);
 		} else {
 		    d.height = d.stackOrder * track.increment;
 		    arrowhead = "#rightarrow";
@@ -606,7 +613,7 @@ genomeTrack.prototype.displayTrack = function(track, i) {
 
     this.itemRects[i].selectAll(".arrow")
     .each(function(d) {
-	console.log(d);
+	    //	console.log(d);
 	    d.width = x1(d.end + 1) - x1(d.start);
 
 	    d3.select(this).select("path")
@@ -775,6 +782,63 @@ genomeTrack.prototype.displayPlotTrack = function(track, i) {
 
 }
 
+genomeTrack.prototype.displayGapTrack = function(track, i) {
+    var visStart = this.visStart,
+    visEnd = this.visEnd,
+    x1 = this.x1,
+    y1 = this.y1;
+    var cfg = this.layout;
+    var self = this;
+
+    if((typeof track.visible !== 'undefined') && (track.visible != false)) {
+    	return;
+    }
+
+    var gap_range = d3.range(10, y1(this.numTracks)+10, 5);
+
+    var items = track.items.filter(function(d) {return (d.start <= visEnd && d.start >= visStart) || (d.end <= visEnd && d.end >= visStart);});
+
+    var gaps = this.itemRects[i].selectAll("path")
+    .data(items, function(d) { return d.id; })
+    .attr("transform", function(d,i) { 
+	    return "translate(" + x1(d.start) + ', 0)'; 
+	})
+    .each(function (d) { d.width = x1(d.end) - x1(d.start); })
+    .attr('d', function(d) { return self.jaggedPathGenerator(d.width, gap_range); } );
+
+    var entering_gaps = gaps.enter().append("path")
+    .each(function (d) { d.width = x1(d.end) - x1(d.start); })
+    .attr('d', function(d) { return self.jaggedPathGenerator(d.width, gap_range); } )
+    .attr("transform", function(d,i) { 
+	    return "translate(" + x1(d.start) + ', 0)'; 
+	})
+    .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
+    .attr("class", function(d) {return track.trackName + '_group ' + (typeof d.feature === 'undefined' ? 'gene' : d.feature); })//;
+
+
+    gaps.exit().remove();
+
+}
+
+genomeTrack.prototype.jaggedPathGenerator = function(width, data) {
+
+    var down = [];
+    //    var up = [];
+    for(var i = 0; i < data.length; i++) {
+	var offset = ((i % 2 === 0) ? 3 : -3);
+	down.push({ x: offset, y: data[i] });
+	down.unshift({ x: offset+width, y: data[i] });
+    }
+
+    var generator = d3.svg.line()
+    .x(function(d,i) { return d.x; })
+    .y(function(d,i) { return d.y; })
+    .interpolate("linear");
+
+    return generator(down);
+    //    return generator(down.concat(up));
+}
+
 genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     var visStart = this.visStart,
     visEnd = this.visEnd,
@@ -938,6 +1002,9 @@ genomeTrack.prototype.redraw = function() {
 	 }
 
 	switch(this.tracks[i].trackType) {
+	case 'gap':
+	    this.displayGapTrack(this.tracks[i], i);
+            break;
 	case "stranded":
 	    this.displayStranded(this.tracks[i], i);
 	    break;
