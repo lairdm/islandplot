@@ -6130,7 +6130,19 @@ var tracks = [
 			{id: 12, bp: 3560005, type: 'adb', name: 'adb9'}
 
 	           ]
-		      }
+		      },
+		  {
+		      trackName: "gapTrack",
+		      trackType: "gap",
+		      inner_radius: 50,
+		      outer_radius: 295,
+		      items: [
+			      {id: 1, start: 10000, end: 11000, name: 'contig_gap1'},
+			      {id: 2, start: 100000, end: 101000, name: 'contig_gap2'},
+			      {id: 3, start: 2000000, end: 2001000, name: 'contig_gap3'},
+			      {id: 4, start: 3000000, end: 3001000, name: 'contig_gap4'},
+		     ]
+                  }
       ];
 
 

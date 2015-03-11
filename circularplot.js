@@ -159,6 +159,10 @@ function circularTrack(layout,tracks) {
 	    if(! this.tracks[i].visible) {
 		continue;
 	    }
+	} else {
+	    // If the user didn't set visible,
+	    // then it's visible.
+	    this.tracks[i].visible = true;
 	}
 
 	// We're going to see what type of tracks we have
@@ -173,6 +177,9 @@ function circularTrack(layout,tracks) {
 	    break;
 	case "stranded":
 	    this.drawTrack(i);
+	    break;
+	case "gap":
+	    this.drawGap(i);
 	    break;
 	case "glyph":
 	    this.findGlyphTypes(i);
@@ -425,11 +432,17 @@ circularTrack.prototype.movePlot = function(i, radius) {
 
     // Save this in case this is a change of radius
     // ratherthan an animated entrance
-    this.tracks[i].plot_radius = radius;
+    if('undefined' !== typeof this.tracks[i].plot_radius) {
+	this.tracks[i].plot_radius = radius;
+    }
 
-//     var plotRange = d3.scale.linear()
+    // We needed to save the new radius but if this
+    // track isn't visible, do nothing
+    if(! this.tracks[i].visible) {
+	return;
+    }
+
     this.tracks[i].plotRange
-//    .domain([track.plot_min, track.plot_max])
 	.range([track.plot_radius-(track.plot_width/2), track.plot_radius+(track.plot_width/2)]);
 
     var plotRange = this.tracks[i].plotRange;
@@ -479,6 +492,7 @@ circularTrack.prototype.removePlot = function(i) {
     // Mark the track as not visible
     this.tracks[i].visible = false;
 }
+
 
 ////////////////////////////////////////////////
 //
@@ -594,6 +608,20 @@ circularTrack.prototype.moveTrack = function(i, innerRadius, outerRadius) {
     var cfg = this.layout;
     var track = this.tracks[i];
 
+    // Just record the new radii in case we need them later
+    if('undefined' !== typeof this.tracks[i].inner_radius) {
+	this.tracks[i].inner_radius = innerRadius;
+    }
+    if('undefined' !== typeof this.tracks[i].outer_radius) {
+	this.tracks[i].outer_radius = outerRadius;
+    }
+
+    // We needed to save the new radius but if this
+    // track isn't visible, do nothing
+    if(! this.tracks[i].visible) {
+	return;
+    }
+
     var arcShrink = d3.svg.arc()
     .innerRadius(function(d){return calcInnerRadius(innerRadius, outerRadius, d.strand);})
     .outerRadius(function(d){return calcOuterRadius(innerRadius, outerRadius, d.strand);})
@@ -619,10 +647,6 @@ circularTrack.prototype.moveTrack = function(i, innerRadius, outerRadius) {
     .duration(1000)
     .attr("d", arcShrink)
     .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
-
-    // Just record the new radii in case we need them later
-    this.tracks[i].inner_radius = innerRadius;
-    this.tracks[i].outer_radius = outerRadius;
 
     // And check if we've been asked to do a centre line
     if('undefined' !== typeof track.centre_line_stroke) {
@@ -655,6 +679,149 @@ circularTrack.prototype.removeTrack = function(i) {
 
     this.tracks[i].visible = false;
 
+}
+
+////////////////////////////////////////////////
+//
+// Gap type tracks
+//
+////////////////////////////////////////////////
+
+circularTrack.prototype.drawGap = function(i, animate) {
+    var g = this.g;
+    var cfg = this.layout;
+    var track = this.tracks[i];
+    var self = this;
+    console.log("gap type");
+
+    var gap_range = ('undefined' == typeof animate) ? d3.range(track.inner_radius, track.outer_radius, 8) : [1,2];
+
+    // Draw the track, putting in elements such as hover colour change
+    // if one exists, click events, etc
+    var gaps = g.selectAll(".tracks."+track.trackName)
+    .data(track.items)
+    .enter()
+    .append("g")
+    .attr("class", function(d) { return track.trackName + ' ' + track.trackName + '_g ' + track.trackName + '_' + d.name + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '') })
+    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+    .each(function(d) {
+	    d3.select(this)
+	    .append("path")
+	    .attr("d", self.jaggedLineGenerator(d.start, gap_range))
+	    .attr("class", function(d2) { return track.trackName + ' ' + track.trackName + '_line' + ('undefined' !== typeof d.extraclass ? d.extraclass : '') })
+	    .attr("stroke-width", 1)
+	    .attr("fill", "none");
+
+	    d3.select(this)
+	    .append("path")
+	    .attr("d", self.jaggedLineGenerator(d.end, gap_range))
+	    .attr("class", function(d2) { return track.trackName + ' ' + track.trackName + '_line' + ('undefined' !== typeof d.extraclass ? d.extraclass : '') })
+	    .attr("stroke-width", 1)
+	    .attr("fill", "none");
+	});
+
+    // If we're doing an animated addition, move the track out to its
+    // new spot
+    if('undefined' !== typeof animate) {
+	this.moveGap(i, track.inner_radius, track.outer_radius);
+    }
+
+}
+
+circularTrack.prototype.moveGap = function(i, innerRadius, outerRadius) {
+    var g = this.g;
+    var cfg = this.layout;
+    var track = this.tracks[i];
+    var self = this;
+
+    // Just record the new radii in case we need them later
+    if('undefined' !== typeof this.tracks[i].inner_radius) {
+	this.tracks[i].inner_radius = innerRadius;
+    }
+    if('undefined' !== typeof this.tracks[i].outer_radius) {
+	this.tracks[i].outer_radius = outerRadius;
+    }
+
+    // We needed to save the new radius but if this
+    // track isn't visible, do nothing
+    if(! this.tracks[i].visible) {
+	return;
+    }
+
+    var gap_range = d3.range(innerRadius, outerRadius, 8);
+
+    g.selectAll("." + track.trackName + '_g') 
+    .transition()
+    .duration(1000)
+    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+
+    g.selectAll('.' + track.trackName + '_line')
+    .transition()
+    .duration(1000)
+    .attrTween("d", function(d) { return pathTween(this, self.jaggedLineGenerator(d.start, gap_range), 4) });
+
+    
+}
+
+circularTrack.prototype.removeGap = function(i) {
+    var g = this.g;
+    var cfg = this.layout;
+    var track = this.tracks[i];
+    var self = this;
+
+    g.selectAll('.' + track.trackName + '_line')
+    .transition()
+    .duration(1000)
+    .attrTween("d", function(d) { return pathTween(this, self.jaggedLineGenerator(d.start, [1,2]), 4) })
+    .remove();
+
+    g.selectAll("." + track.trackName + '_g') 
+    .transition()
+    .duration(1000)
+    .style('opacity', 0)
+    .remove()
+
+    this.tracks[i].visible = false;
+
+}
+
+// Jagged line path generator for the gap track type
+
+circularTrack.prototype.jaggedLineGenerator = function(bp, data) {
+    var cfg = this.layout;
+
+    var generator = d3.svg.line()
+	.x(function(d, i) { var offset = ((i % 2 === 0) ? 0.02 : -0.02); return d * Math.cos((bp*cfg.radians_pre_bp)-Math.PI/2+(i ? offset : 0) ); } )
+	.y(function(d, i) { var offset = ((i % 2 === 0) ? 0.02 : -0.02); return d * Math.sin((bp*cfg.radians_pre_bp)-Math.PI/2+ (i ? offset : 0) ); } )
+	.interpolate("linear");
+
+    return generator(data);
+}
+
+function pathTween(path, d1, precision) {
+    //  return function() {
+      //    var path0 = this,
+    var path0 = path,
+        path1 = path0.cloneNode(),
+        n0 = path0.getTotalLength(),
+        n1 = (path1.setAttribute("d", d1), path1).getTotalLength();
+
+    // Uniform sampling of distance based on specified precision.
+    var distances = [0], i = 0, dt = precision / Math.max(n0, n1);
+    while ((i += dt) < 1) distances.push(i);
+    distances.push(1);
+
+    // Compute point-interpolators at each distance.
+    var points = distances.map(function(t) {
+      var p0 = path0.getPointAtLength(t * n0),
+          p1 = path1.getPointAtLength(t * n1);
+      return d3.interpolate([p0.x, p0.y], [p1.x, p1.y]);
+    });
+
+    return function(t) {
+      return t < 1 ? "M" + points.map(function(p) { return p(t); }).join("L") : d1;
+    };
+    //  };
 }
 
 ////////////////////////////////////////////////
@@ -1211,6 +1378,8 @@ circularTrack.prototype.showTrack = function(name) {
     // Is it already visible? Do nothing
     if(this.tracks[i].visible) {
 	return;
+    } else {
+	this.tracks[i].visible = true;
     }
 
     switch(this.tracks[i].trackType) {
@@ -1221,7 +1390,10 @@ circularTrack.prototype.showTrack = function(name) {
     this.drawTrack(i, true);
         break;
     case "stranded":
-    this.drawTrack(i, true);
+        this.drawTrack(i, true);
+        break;
+    case "gap":
+        this.drawGap(i, true);
         break;
     case "glyph":
         // Do nothing for a glyph type, special case
@@ -1255,6 +1427,9 @@ circularTrack.prototype.hideTrack = function(name) {
         break;
     case "stranded":
         this.removeTrack(i);
+        break;
+    case "gap":
+        this.removeGap(i);
         break;
     case "glyph":
         // Do nothing for a glyph type, special case
@@ -1409,11 +1584,11 @@ circularTrack.prototype.resize = function(newWidth) {
     // Resize the plots
     for(var i=0; i < this.tracks.length; i++) {
 
-	if('undefined' !== typeof this.tracks[i].visible) {
-	    if(! this.tracks[i].visible) {
-		continue;
-	    }
-	}
+	//	if('undefined' !== typeof this.tracks[i].visible) {
+	//	    if(! this.tracks[i].visible) {
+	//		continue;
+	//	    }
+	//	}
 
 	// We're going to see what type of tracks we have
 	// and dispatch them appropriately
@@ -1428,13 +1603,16 @@ circularTrack.prototype.resize = function(newWidth) {
 	case "stranded":
 	    this.moveTrack(i, (this.tracks[i].inner_radius*resize_ratio), (this.tracks[i].outer_radius*resize_ratio));
 	    break;
+	case "gap":
+	    this.moveGap(i, (this.tracks[i].inner_radius*resize_ratio), (this.tracks[i].outer_radius*resize_ratio));
+	    break;
 	case "glyph":
-//	    this.findGlyphTypes(i);
-//	    this.tracks[i].container = 
-//		this.g.append("g")
-//		.attr("class", this.tracks[i].trackName + "_glyph_container")
 	    this.tracks[i].radius = this.tracks[i].radius * resize_ratio;
-	    this.drawGlyphTrack(i);
+	    // We needed to save the new radius but if this
+	    // track isn't visible, do nothing
+	    if(this.tracks[i].visible) {
+		this.drawGlyphTrack(i);
+	    }
 	    break;
 	default:
 	    // Do nothing for an unknown track type

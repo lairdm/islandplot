@@ -19,6 +19,14 @@ function updateStrand(cb) {
     }
 }
 
+function updateGaps(cb) {
+    if(cb.checked) {
+	cTrack.showTrack("gapTrack");
+    } else {
+	cTrack.hideTrack("gapTrack");
+    }
+}
+
 
 function updateAdb(cb) {
     if(cb.checked) {

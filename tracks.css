@@ -144,6 +144,10 @@
     fill: #FF9933;
 }
 
+.gapTrack {
+    stroke: black;
+}
+
 .trackAxis .domain {
     stroke-width: 1;
 }
