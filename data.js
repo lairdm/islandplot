@@ -6136,6 +6136,7 @@ var tracks = [
 		      trackType: "gap",
 		      inner_radius: 50,
 		      outer_radius: 295,
+		      showTooltip: true,
 		      items: [
 			      {id: 1, start: 10000, end: 11000, name: 'contig_gap1'},
 			      {id: 2, start: 100000, end: 101000, name: 'contig_gap2'},

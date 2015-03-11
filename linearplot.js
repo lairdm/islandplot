@@ -790,6 +790,14 @@ genomeTrack.prototype.displayGapTrack = function(track, i) {
     var cfg = this.layout;
     var self = this;
 
+    // Because of how the tooltip library binds to the SVG object we have to turn it
+    // on or off here rather than in the .on() call, we'll redirect the calls to
+    // a dummy do-nothing object if we're not showing tips in this context.
+    var tip = {show: function() {}, hide: function() {} };
+    if(('undefined' !== typeof track.showTooltip) && track.showTooltip) {
+	tip = this.tip;
+    }
+
     if((typeof track.visible !== 'undefined') && (track.visible == false)) {
     	return;
     }
@@ -815,7 +823,41 @@ genomeTrack.prototype.displayGapTrack = function(track, i) {
 	})
     .attr("id", function(d,i) { return track.trackName + '_' + d.id; })
     .attr("class", function(d) {return track.trackName + ' linearplot ' + (typeof d.feature === 'undefined' ? 'gene' : d.feature); })//;
-
+    .on("click", function(d,i) {
+	    if (d3.event.defaultPrevented) return; // click suppressed
+	    if('undefined' !== typeof track.linear_mouseclick) {
+		var fn = window[track.linear_mouseclick];
+		if('object' ==  typeof fn) {
+		    return fn.onclick(track.trackName, d, cfg.plotid);
+		} else if('function' == typeof fn) {
+		    return fn(track.trackName, d, cfg.plotid);
+		}
+	    } else {
+		null;
+	    }
+	})
+    .on('mouseover', function(d) { 
+	    tip.show(d);
+	    if('undefined' !== typeof track.linear_mouseover) {
+		var fn = window[track.linear_mouseover];
+		if('object' ==  typeof fn) {
+		    return fn.mouseover(track.trackName, d, cfg.plotid);
+		} else if('function' == typeof fn) {
+		    return fn(track.trackName, d, cfg.plotid);
+		}
+	    }	
+	})
+    .on('mouseout', function(d) { 
+	    tip.hide(d);
+	    if('undefined' !== typeof track.linear_mouseout) {
+		var fn = window[track.linear_mouseout];
+		if('object' ==  typeof fn) {
+		    return fn.mouseout(track.trackName, d, cfg.plotid);
+		} else if('function' == typeof fn) {
+		    return fn(track.trackName, d, cfg.plotid);
+		}
+	    }	
+	});
 
     gaps.exit().remove();
 
