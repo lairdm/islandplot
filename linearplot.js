@@ -6,7 +6,7 @@ var linearTrackDefaults = {
     bottom_margin: 5,
     axis_height: 50,
     name: "defaultlinear",
-    dragresize: true,
+    dragresize: true
 };
 
 function genomeTrack(layout,tracks) {
@@ -134,8 +134,9 @@ function genomeTrack(layout,tracks) {
 	
 
     // Start with showing the entire genome
-    this.visStart = 0;
-    this.visEnd = layout.genomesize;
+    this.visStart = 'undefined' !== typeof layout.initStart ? layout.initStart : 0;
+    this.visEnd = 'undefined' !== typeof layout.initEnd ? layout.initEnd : layout.genomesize;
+
     this.genomesize = layout.genomesize;
 
     this.tip = d3.tip()

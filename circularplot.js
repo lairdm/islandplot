@@ -13,7 +13,7 @@ var circularTrackDefaults = {
     legend_spacing: 5,
     min_radians: .02 * Math.PI,
     dragresize: true,
-    movecursor: false,
+    movecursor: false
 }
 
 function circularTrack(layout,tracks) {
@@ -38,11 +38,16 @@ function circularTrack(layout,tracks) {
 
     this.layout.containerid =  layout.container.slice(1);
 
+    // Some constants for later so we don't have to keep recalculating
+    this.layout.w2 = this.layout.w / 2;
+    this.layout.h2 = this.layout.h / 2;
+    this.layout.PI2 = Math.PI/2;
+
     // Setup some constants we'll need and build the canvas
     this.layout.radians_pre_bp = this.layout.radians/this.layout.genomesize;
     this.layout.min_bp_per_slice = this.layout.min_radians / this.layout.radians_pre_bp;
     this.layout.min_bp_per_slice_half = this.layout.min_bp_per_slice/2;
-    this.layout.radius = this.layout.factor*Math.min(this.layout.w/2, this.layout.h/2);
+    this.layout.radius = this.layout.factor*Math.min(this.layout.w2, this.layout.h2);
     this.xScale = d3.scale.linear()
 	.range([0,this.layout.radians])
 	.domain([0, layout.genomesize]);
@@ -64,8 +69,8 @@ function circularTrack(layout,tracks) {
     this.container.on("dblclick", function(d,i) {
 	    if('undefined' !== typeof this.layout.dblclick) {
 		var node = this.g.node();
-		var curBP = calcRadBPfromXY((d3.mouse(node)[0] - (this.layout.w/2)),
-						  -(d3.mouse(node)[1] - (this.layout.h/2)),
+		var curBP = calcRadBPfromXY((d3.mouse(node)[0] - (this.layout.w2)),
+						  -(d3.mouse(node)[1] - (this.layout.h2)),
 						  xScale)[1];
 		var fn = window[this.layout.dblclick];
 
@@ -170,6 +175,7 @@ function circularTrack(layout,tracks) {
 
 	switch(this.tracks[i].trackType) {
 	case "plot":
+	    tracks[i].rad_per_elem = tracks[i].bp_per_element*this.layout.radians_pre_bp;
 	    this.drawPlot(i);
 	    break;
 	case "track":
@@ -274,10 +280,10 @@ circularTrack.prototype.drawAxis = function() {
     .attr("class", "axis");
 
     axis.append("line")
-    .attr("x1", function(d, i){return cfg.w/2 + (20*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
-    .attr("y1", function(d, i){return cfg.h/2 + (20*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));})
-    .attr("x2", function(d, i){return cfg.w/2 + (cfg.radius*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
-    .attr("y2", function(d, i){return cfg.h/2 + (cfg.radius*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));})
+    .attr("x1", function(d, i){return cfg.w2 + (20*Math.cos((d*cfg.radians_pre_bp)-cfg.PI2));})
+    .attr("y1", function(d, i){return cfg.h2 + (20*Math.sin((d*cfg.radians_pre_bp)-cfg.PI2));})
+    .attr("x2", function(d, i){return cfg.w2 + (cfg.radius*Math.cos((d*cfg.radians_pre_bp)-cfg.PI2));})
+    .attr("y2", function(d, i){return cfg.h2 + (cfg.radius*Math.sin((d*cfg.radians_pre_bp)-cfg.PI2));})
     .attr("class", "line")
     .style("stroke", "grey")
     .style("stroke-width", "1px");
@@ -298,8 +304,8 @@ circularTrack.prototype.drawAxis = function() {
     .attr("text-anchor", "middle")
     .attr("dy", "1.5em")
     .attr("transform", function(d, i){return "translate(0, -10)"})
-    .attr("x", function(d, i){return cfg.w/2 + ((cfg.radius+10)*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
-    .attr("y", function(d, i){return cfg.h/2 + ((cfg.radius+10)*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));});
+    .attr("x", function(d, i){return cfg.w2 + ((cfg.radius+10)*Math.cos((d*cfg.radians_pre_bp)-cfg.PI2));})
+    .attr("y", function(d, i){return cfg.h2 + ((cfg.radius+10)*Math.sin((d*cfg.radians_pre_bp)-cfg.PI2));});
 
     // And draw the pretty outer circle for the axis
     this.drawCircle("outerAxis", cfg.radius-10, 'grey');
@@ -313,18 +319,18 @@ circularTrack.prototype.moveAxis = function() {
 	.data(d3.range(0,cfg.genomesize, cfg.spacing))
         .transition()
         .duration(1000)
-	.attr("x1", function(d, i){return cfg.w/2 + (20*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
-	.attr("y1", function(d, i){return cfg.h/2 + (20*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));})
-	.attr("x2", function(d, i){return cfg.w/2 + (cfg.radius*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
-	.attr("y2", function(d, i){return cfg.h/2 + (cfg.radius*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));});
+	.attr("x1", function(d, i){return cfg.w2 + (20*Math.cos((d*cfg.radians_pre_bp)-cfg.PI2));})
+	.attr("y1", function(d, i){return cfg.h2 + (20*Math.sin((d*cfg.radians_pre_bp)-cfg.PI2));})
+	.attr("x2", function(d, i){return cfg.w2 + (cfg.radius*Math.cos((d*cfg.radians_pre_bp)-cfg.PI2));})
+	.attr("y2", function(d, i){return cfg.h2 + (cfg.radius*Math.sin((d*cfg.radians_pre_bp)-cfg.PI2));});
 
     this.axis_container
 	.selectAll("text")
 	.data(d3.range(0,cfg.genomesize, cfg.spacing*cfg.legend_spacing))
         .transition()
         .duration(1000)
-	.attr("x", function(d, i){return cfg.w/2 + ((cfg.radius+10)*Math.cos((d*cfg.radians_pre_bp)-Math.PI/2));})
-	.attr("y", function(d, i){return cfg.h/2 + ((cfg.radius+10)*Math.sin((d*cfg.radians_pre_bp)-Math.PI/2));});
+	.attr("x", function(d, i){return cfg.w2 + ((cfg.radius+10)*Math.cos((d*cfg.radians_pre_bp)-cfg.PI2));})
+	.attr("y", function(d, i){return cfg.h2 + ((cfg.radius+10)*Math.sin((d*cfg.radians_pre_bp)-cfg.PI2));});
 
     // And draw the pretty outer circle for the axis
     this.moveCircle("outerAxis", cfg.radius-10);
@@ -344,8 +350,8 @@ circularTrack.prototype.drawCircle = function(name, radius, line_stroke, animate
     .attr("class", name + "_circle")
     .style("fill", "none")
     .style("stroke", line_stroke)
-    .attr("cx", cfg.w/2)
-    .attr("cy", cfg.h/2);
+    .attr("cx", cfg.w2)
+    .attr("cy", cfg.h2);
 
     // An animated entrance
     if('undefined' !== typeof animate) {
@@ -364,8 +370,8 @@ circularTrack.prototype.moveCircle = function(name, radius) {
     .transition()
     .duration(1000)
     .attr("r", radius)
-    .attr("cx", cfg.w/2)
-    .attr("cy", cfg.h/2);
+    .attr("cx", cfg.w2)
+    .attr("cy", cfg.h2);
 
 }
 
@@ -400,8 +406,8 @@ circularTrack.prototype.drawPlot = function(i, animate) {
     var plotRange = this.tracks[i].plotRange;
 
     var lineFunction = d3.svg.line()
-    .x(function(d, i) { return cfg.w/2 + ((('undefined' == typeof animate) ? plotRange(d) : 1 )*Math.cos((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
-    .y(function(d, i) { return cfg.h/2 + ((('undefined' == typeof animate) ? plotRange(d) : 1 )*Math.sin((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+    .x(function(d, i) { return cfg.w2 + ((('undefined' == typeof animate) ? plotRange(d) : 1 )*Math.cos((i*track.rad_per_elem)-(cfg.PI2))); })
+    .y(function(d, i) { return cfg.h2 + ((('undefined' == typeof animate) ? plotRange(d) : 1 )*Math.sin((i*track.rad_per_elem)-(cfg.PI2))); })
     .interpolate("linear");
 
     g.append("path")
@@ -448,8 +454,8 @@ circularTrack.prototype.movePlot = function(i, radius) {
     var plotRange = this.tracks[i].plotRange;
 
     var lineFunction = d3.svg.line()
-    .x(function(d, i, j) { return cfg.w/2 + (plotRange(d)*Math.cos((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
-    .y(function(d, i) { return cfg.h/2 + (plotRange(d)*Math.sin((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+    .x(function(d, i, j) { return cfg.w2 + (plotRange(d)*Math.cos((i*track.rad_per_elem)-(cfg.PI2))); })
+    .y(function(d, i) { return cfg.h2 + (plotRange(d)*Math.sin((i*track.rad_per_elem)-(cfg.PI2))); })
     .interpolate("linear");
 
     var plot = g.selectAll("." + track.trackName)
@@ -474,8 +480,8 @@ circularTrack.prototype.removePlot = function(i) {
     .range([1-(track.plot_width/2), 1+(track.plot_width/2)]);
 
     var lineFunction = d3.svg.line()
-    .x(function(d, i) { return cfg.w/2 + (plotRange(d)*Math.cos((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
-    .y(function(d, i) { return cfg.h/2 + (plotRange(d)*Math.sin((i*track.bp_per_element*cfg.radians_pre_bp)-(Math.PI/2))); })
+    .x(function(d, i) { return cfg.w2 + (plotRange(d)*Math.cos((i*track.rad_per_elem)-(cfg.PI2))); })
+    .y(function(d, i) { return cfg.h2 + (plotRange(d)*Math.sin((i*track.rad_per_elem)-(cfg.PI2))); })
     .interpolate("linear");
 
     g.selectAll("." + track.trackName)
@@ -543,7 +549,7 @@ circularTrack.prototype.drawTrack = function(i, animate) {
     .append("path")
     .attr("d", arc)
     .attr("class", function(d) { return track.trackName + ('undefined' !== typeof d.strand ? '_' + (d.strand == 1 ? 'pos' : 'neg') : '') + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '') })
-    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+    .attr("transform", "translate("+cfg.w2+","+cfg.h2+")")
     .on("click", function(d,i) {
 	    if('undefined' !== typeof track.mouseclick) {
 		var fn = window[track.mouseclick];
@@ -646,7 +652,7 @@ circularTrack.prototype.moveTrack = function(i, innerRadius, outerRadius) {
     .transition()
     .duration(1000)
     .attr("d", arcShrink)
-    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+    .attr("transform", "translate("+cfg.w2+","+cfg.h2+")")
 
     // And check if we've been asked to do a centre line
     if('undefined' !== typeof track.centre_line_stroke) {
@@ -703,7 +709,7 @@ circularTrack.prototype.drawGap = function(i, animate) {
     .enter()
     .append("g")
     .attr("class", function(d) { return track.trackName + ' ' + track.trackName + '_g ' + track.trackName + '_' + d.name + ' ' + ('undefined' !== typeof d.extraclass ? d.extraclass : '') })
-    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+    .attr("transform", "translate("+cfg.w2+","+cfg.h2+")")
     .each(function(d) {
 	    d3.select(this)
 	    .append("path")
@@ -753,7 +759,7 @@ circularTrack.prototype.moveGap = function(i, innerRadius, outerRadius) {
     g.selectAll("." + track.trackName + '_g') 
     .transition()
     .duration(1000)
-    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+    .attr("transform", "translate("+cfg.w2+","+cfg.h2+")")
 
     g.selectAll('.' + track.trackName + '_line')
     .transition()
@@ -791,8 +797,8 @@ circularTrack.prototype.jaggedLineGenerator = function(bp, data) {
     var cfg = this.layout;
 
     var generator = d3.svg.line()
-	.x(function(d, i) { var offset = ((i % 2 === 0) ? 0.02 : -0.02); return d * Math.cos((bp*cfg.radians_pre_bp)-Math.PI/2+(i ? offset : 0) ); } )
-	.y(function(d, i) { var offset = ((i % 2 === 0) ? 0.02 : -0.02); return d * Math.sin((bp*cfg.radians_pre_bp)-Math.PI/2+ (i ? offset : 0) ); } )
+	.x(function(d, i) { var offset = ((i % 2 === 0) ? 0.02 : -0.02); return d * Math.cos((bp*cfg.radians_pre_bp)-cfg.PI2+(i ? offset : 0) ); } )
+	.y(function(d, i) { var offset = ((i % 2 === 0) ? 0.02 : -0.02); return d * Math.sin((bp*cfg.radians_pre_bp)-cfg.PI2+ (i ? offset : 0) ); } )
 	.interpolate("linear");
 
     return generator(data);
@@ -850,10 +856,10 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
 	    continue;
 	}
 
-	xs = (cfg.h/2 + (track.radius*Math.sin((items[i].bp*cfg.radians_pre_bp)-Math.PI/2))) -
-	(cfg.h/2 + (track.radius*Math.sin((items[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
-	ys = (cfg.h/2 + (track.radius*Math.cos((items[i].bp*cfg.radians_pre_bp)-Math.PI/2))) -
-	(cfg.h/2 + (track.radius*Math.cos((items[i-1].bp*cfg.radians_pre_bp)-Math.PI/2)));
+	xs = (cfg.h/2 + (track.radius*Math.sin((items[i].bp*cfg.radians_pre_bp)-cfg.PI2))) -
+	(cfg.h/2 + (track.radius*Math.sin((items[i-1].bp*cfg.radians_pre_bp)-cfg.PI2)));
+	ys = (cfg.h/2 + (track.radius*Math.cos((items[i].bp*cfg.radians_pre_bp)-cfg.PI2))) -
+	(cfg.h/2 + (track.radius*Math.cos((items[i-1].bp*cfg.radians_pre_bp)-cfg.PI2)));
 	xs = xs * xs;
 	ys = ys * ys;
 	var dist = Math.sqrt(xs + ys);
@@ -866,8 +872,8 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
 	items[i].stackCount = 0;
     }
 
-    var x = function(d,i) { return cfg.w/2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
-    var y = function(d,i) { return cfg.h/2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-Math.PI/2)); };
+    var x = function(d,i) { return cfg.w2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.cos((d.bp*cfg.radians_pre_bp)-cfg.PI2)); };
+    var y = function(d,i) { return cfg.h2 + (((track.glyph_buffer * d.stackCount) + track.radius)*Math.sin((d.bp*cfg.radians_pre_bp)-cfg.PI2)); };
 
     var trackPath = g.selectAll("." + track.trackName)
     //    var trackPath = track.container.selectAll("." + track.trackName)
@@ -882,7 +888,7 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     trackPath.exit()
     .transition()
     .duration(1000)
-    .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
+    .attr("transform", "translate(" + cfg.h2 + "," + cfg.w2 + ")")
     .style("opacity", 0)
     .remove();
 
@@ -891,7 +897,7 @@ circularTrack.prototype.drawGlyphTrack = function(i) {
     .attr('id', function(d,i) { return track.trackName + "_glyph" + d.id; })
     .attr('class', function(d) {return track.trackName + '_' + d.type + ' ' + track.trackName})
     .attr("d", d3.svg.symbol().type(track.glyphType).size(track.glyphSize))
-    .attr("transform", "translate(" + cfg.h/2 + "," + cfg.w/2 + ")")
+    .attr("transform", "translate(" + cfg.h2 + "," + cfg.w2 + ")")
     .style("opacity", 0)
     .transition()
     .duration(1000)
@@ -944,21 +950,21 @@ circularTrack.prototype.redrawBrush = function(startRad, endRad) {
 	this.brush
 	    .transition()
 	    .duration(1000)
-	    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")");
+	    .attr("transform", "translate("+cfg.w2+","+cfg.h2+")");
 
 	this.moveBrush(startRad, endRad);
 
 	d3.select("#brushStart_" + cfg.containerid)		
 	    .transition()
 	    .duration(1000)
-	    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
-	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
+	    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-cfg.PI2)))
+	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-cfg.PI2)));
 
 	d3.select("#brushEnd_" + cfg.containerid)		
 	    .transition()
 	    .duration(1000)
-	    .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
-	    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(endRad-Math.PI/2)));
+	    .attr("cx", cfg.w2 + ((cfg.radius-10)*Math.cos(endRad-cfg.PI2)))
+	    .attr("cy", cfg.h2 + ((cfg.radius-10)*Math.sin(endRad-cfg.PI2)));
 
     }
 }
@@ -984,15 +990,15 @@ circularTrack.prototype.createBrush = function() {
     .attr("d", this.brushArc)
     .attr("id", "polarbrush_" + cfg.containerid)
     .attr("class", "polarbrush circularbrush")
-    .attr("transform", "translate("+cfg.w/2+","+cfg.h/2+")")
+    .attr("transform", "translate("+cfg.w2+","+cfg.h2+")")
 
     var dragStart = d3.behavior.drag()
     .on("drag", function(d) {
 	    var mx = d3.mouse(this)[0];
 	    var my = d3.mouse(this)[1];
 
-	    var curRadandBP = calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
-					      -(d3.mouse(this)[1] - (cfg.h/2)),
+	    var curRadandBP = calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w2)),
+					      -(d3.mouse(this)[1] - (cfg.h2)),
 					      xScale);
 
 	    // Don't allow the brush to go beyond the other
@@ -1001,8 +1007,8 @@ circularTrack.prototype.createBrush = function() {
 	    }
 
 	    g.select("#brushStart_" + cfg.containerid)		
-	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
-	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
+	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-cfg.PI2);})
+	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-cfg.PI2); });
 		
 	    self.brushStart = curRadandBP[0];
 	    self.brushStartBP = curRadandBP[1];
@@ -1021,8 +1027,8 @@ circularTrack.prototype.createBrush = function() {
 	    var mx = d3.mouse(this)[0];
 	    var my = d3.mouse(this)[1];
 
-	    var curRadandBP = calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w/2)),
-					      -(d3.mouse(this)[1] - (cfg.h/2)),
+	    var curRadandBP = calcRadBPfromXY((d3.mouse(this)[0] - (cfg.w2)),
+					      -(d3.mouse(this)[1] - (cfg.h2)),
 					      xScale);
 
 	    // Don't allow the brush to go beyond the other
@@ -1031,8 +1037,8 @@ circularTrack.prototype.createBrush = function() {
 	    }
 
 	    g.select("#brushEnd_" + cfg.containerid)		
-	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-Math.PI/2);})
-	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-Math.PI/2); });
+	    .attr("cx", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.cos((curRadandBP[0])-cfg.PI2);})
+	    .attr("cy", function(d, i){return cfg.h/2 + (cfg.radius-10)*Math.sin((curRadandBP[0])-cfg.PI2); });
 		
 	    self.brushEnd = curRadandBP[0];
 	    self.brushEndBP = curRadandBP[1];
@@ -1050,9 +1056,9 @@ circularTrack.prototype.createBrush = function() {
     .attr({
 	    id: 'brushEnd_' + cfg.containerid,
 	    class: 'brushEnd circularbrush',
-		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
-		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
-		r: 5,
+		cx: (cfg.w2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-cfg.PI2))),
+		cy: (cfg.h2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-cfg.PI2))),
+		r: 5
 	    })
             .call(dragEnd);
 
@@ -1060,9 +1066,9 @@ circularTrack.prototype.createBrush = function() {
     .attr({
 	    id: 'brushStart_' + cfg.containerid,
 	    class: 'brushStart circularbrush',
-		cx: (cfg.w/2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-Math.PI/2))),
-		cy: (cfg.h/2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-Math.PI/2))),
-		r: 5,
+		cx: (cfg.w2 + ((cfg.radius-10)*Math.cos((this.xScale(0))-cfg.PI2))),
+		cy: (cfg.h2 + ((cfg.radius-10)*Math.sin((this.xScale(0))-cfg.PI2))),
+		r: 5
 		})
     .call(dragStart);
 
@@ -1130,14 +1136,14 @@ circularTrack.prototype.moveBrushbyBP = function(startbp, endbp) {
     this.currentStart = startRad;
     this.currentEnd = endRad;
     d3.select("#brushStart_" + cfg.containerid)		
-    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-Math.PI/2)))
-    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-Math.PI/2)));
+    .attr("cx", cfg.h/2 + ((cfg.radius-10)*Math.cos(startRad-cfg.PI2)))
+    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(startRad-cfg.PI2)));
 
     this.brushEnd = endRad;
     this.brushEndBP = endbp;
     d3.select("#brushEnd_" + cfg.containerid)		
-    .attr("cx", cfg.w/2 + ((cfg.radius-10)*Math.cos(endRad-Math.PI/2)))
-    .attr("cy", cfg.h/2 + ((cfg.radius-10)*Math.sin(endRad-Math.PI/2)));
+    .attr("cx", cfg.w2 + ((cfg.radius-10)*Math.cos(endRad-cfg.PI2)))
+    .attr("cy", cfg.h2 + ((cfg.radius-10)*Math.sin(endRad-cfg.PI2)));
 
 
 }
@@ -1561,7 +1567,9 @@ circularTrack.prototype.dragresize_end = function() {
     this.resize(this.layout.w);
 
     this.layout.w = newSize;
+    this.layout.w2 = newSize / 2;
     this.layout.h = newSize;
+    this.layout.h2 = this.layout.w2;
 
     this.drag_shadow
 	.attr("class", "linear_hidden dragbar-shadow");
@@ -1577,7 +1585,9 @@ circularTrack.prototype.resize = function(newWidth) {
     this.layout.radius = this.layout.factor*Math.min(newWidth/2, newWidth/2);
 
     this.layout.w = newWidth;
+    this.layout.w2 = newWidth / 2;
     this.layout.h = newWidth;
+    this.layout.h2 = this.layout.w2;
 
     this.moveAxis();
 
@@ -1717,7 +1727,7 @@ function calcOuterRadius (inner, outer, strand) {
 }
 
 function calcRadBPfromXY (x,y,xScale) {
-    var rad = Math.PI/2 - Math.atan(y/x);
+    var rad = cfg.PI2 - Math.atan(y/x);
     if(x < 0) {
 	// II & III quadrant
 	rad = rad + Math.PI;
