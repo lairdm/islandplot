@@ -247,6 +247,10 @@ function genomeTrack(layout,tracks) {
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
 		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
+	    if('undefined' !== typeof this.tracks[i].linear_skipInit && this.tracks[i].linear_skipInit) {
+		console.log("skipping");
+		break;
+	    }
 	    this.displayStranded(this.tracks[i], i);
 	    break;
 	case "track":
@@ -254,6 +258,9 @@ function genomeTrack(layout,tracks) {
 		.attr("class", this.tracks[i].trackName)
 		.attr("width", this.layout.width_without_margins)
 		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
+	    if('undefined' !== typeof this.tracks[i].linear_skipInit && this.tracks[i].linear_skipInit) {
+		break;
+	    }
 	    this.displayTrack(this.tracks[i], i);
 	    break;
 	case "glyph":
