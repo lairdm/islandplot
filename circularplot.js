@@ -1727,7 +1727,7 @@ function calcOuterRadius (inner, outer, strand) {
 }
 
 function calcRadBPfromXY (x,y,xScale) {
-    var rad = cfg.PI2 - Math.atan(y/x);
+    var rad = Math.PI/2 - Math.atan(y/x);
     if(x < 0) {
 	// II & III quadrant
 	rad = rad + Math.PI;
