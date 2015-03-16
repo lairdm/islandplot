@@ -248,7 +248,6 @@ function genomeTrack(layout,tracks) {
 		.attr("width", this.layout.width_without_margins)
 		.attr("clip-path", "url(#trackClip_" + this.layout.containerid + ")");
 	    if('undefined' !== typeof this.tracks[i].linear_skipInit && this.tracks[i].linear_skipInit) {
-		console.log("skipping");
 		break;
 	    }
 	    this.displayStranded(this.tracks[i], i);
@@ -898,7 +897,7 @@ genomeTrack.prototype.displayGlyphTrack = function(track, i) {
     y1 = this.y1;
     var cfg = this.layout;
 
-    if((typeof track.visible !== 'undefined') && (track.visible != false)) {
+    if((typeof track.visible !== 'undefined') && (track.visible == false)) {
     	return;
     }
 
