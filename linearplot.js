@@ -1175,9 +1175,16 @@ genomeTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, for
 	if(null == str) continue;
 
 	if (str.substr(str.length-sheetlength)==stylesheetfile){
-      	    var rules = document.styleSheets[i].rules;
-            for (var j=0; j<rules.length;j++){
-		style.textContent += (rules[j].cssText + "\n");
+            var rules;
+            if(document.styleSheets[i].cssRules) {
+                rules = document.styleSheets[i].cssRules;
+            } else if (document.styleSheets[i].rules) {
+                rules = document.styleSheets[i].rules;
+            }
+            if(rules) {
+                for (var j=0; j<rules.length;j++){
+                    style.textContent += (rules[j].cssText + "\n");
+                }
             }
             break;
     	}
