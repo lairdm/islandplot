@@ -1537,6 +1537,11 @@ circularTrack.prototype.dragresize = function() {
 
     var newSize = Math.max(newWidth, newHeight);
 
+    // Don't allow going below 25px in size
+    if(newSize <= 25) {
+        return;
+    }
+
 //    console.log(this.layout.w);
 //    console.log("x " + newWidth);
 //    console.log("y " + newHeight);
