@@ -698,7 +698,6 @@ circularTrack.prototype.drawGap = function(i, animate) {
     var cfg = this.layout;
     var track = this.tracks[i];
     var self = this;
-    console.log("gap type");
 
     var gap_range = ('undefined' == typeof animate) ? d3.range(track.inner_radius, track.outer_radius, 8) : [1,2];
 
