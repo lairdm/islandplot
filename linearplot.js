@@ -40,12 +40,18 @@ function genomeTrack(layout,tracks) {
 
     this.itemRects = [];
 
+    // Start with showing the entire genome unless otherwise stated
+    this.visStart = 'undefined' !== typeof layout.initStart ? layout.initStart : 0;
+    this.visEnd = 'undefined' !== typeof layout.initEnd ? layout.initEnd : layout.genomesize;
+
     this.x = d3.scale.linear()
-	.domain([0, layout.genomesize])
+//	.domain([0, layout.genomesize])
+	.domain([this.visStart, this.visEnd])
 	.range([0,this.layout.width_without_margins]);
     this.x1 = d3.scale.linear()
 	.range([0,this.layout.width_without_margins])
-       	.domain([0, layout.genomesize]);
+//       	.domain([0, layout.genomesize]);
+       	.domain([this.visStart, this.visEnd]);
     this.y1 = d3.scale.linear()
 	.domain([0,this.numTracks])
 	.range([0,(this.layout.height_without_axis-this.layout.bottom_margin)]);
@@ -132,10 +138,6 @@ function genomeTrack(layout,tracks) {
 	    .attr("class", "dragbar-line");
     }
 	
-
-    // Start with showing the entire genome
-    this.visStart = 'undefined' !== typeof layout.initStart ? layout.initStart : 0;
-    this.visEnd = 'undefined' !== typeof layout.initEnd ? layout.initEnd : layout.genomesize;
 
     this.genomesize = layout.genomesize;
 
@@ -1121,6 +1123,10 @@ genomeTrack.prototype.rescale = function() {
 }
 
 genomeTrack.prototype.addBrushCallback = function(obj) {
+
+    // We allow multiple brushes to be associated with a linear plot, if we have
+    // a brush already, add this new one on.  Otherwise just remember it.
+
     if('undefined' !== typeof this.callbackObj) {
 
 	if( Object.prototype.toString.call( obj ) === '[object Array]' ) { 
@@ -1132,6 +1138,10 @@ genomeTrack.prototype.addBrushCallback = function(obj) {
     } else {
 	this.callbackObj = obj;
     }
+
+    // And make sure our new brush is updated to reflect
+    // the current visible area
+    obj.update(this.visStart, this.visEnd);
 }
 
 genomeTrack.prototype.callBrushFinished = function() {
