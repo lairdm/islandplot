@@ -14,6 +14,15 @@ The circular viewer was written first, hence why you might find the configuratio
 seem more aimed towards it as their default, most options have a linear_ prefixed
 version for the linear viewer.
 
+Examples
+========
+
+Demo of the circular plot can be found at [this gist](http://bl.ocks.org/lairdm/6a770c94c6793eee660d).
+
+Demo of the linear plot can be found at [this gist](http://bl.ocks.org/lairdm/c6c235dbfa6e6ee61565).
+
+A demo of the circular and linear plots with their panning features linked together can be found at [this gist](http://bl.ocks.org/lairdm/3a38883488d71623901c).
+
 Available track types
 =====================
 
