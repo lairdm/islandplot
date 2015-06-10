@@ -1231,9 +1231,9 @@ circularTrack.prototype.savePlot = function(scaling, filename, stylesheetfile, f
     // Remove drag-resize shadow element
     var tags = svg.getElementsByClassName("dragbar-shadow")
     for(var i=0; i<tags.length; i++) {
-	if(tags[i].getAttributeNS(null, "name") === name) {
+//	if(tags[i].getAttributeNS(null, "name") === name) {
 	    tags[i].parentNode.removeChild(tags[i]);
-        }
+//        }
     }
 
     // Remove the brush if it's on the chart
