@@ -38,11 +38,18 @@ function genomeTrack(layout,tracks) {
     this.layout.height_without_axis = this.layout.height -
 	this.layout.axis_height;
 
+
+    if('undefined' !== typeof layout.offset) {
+	this.start_offset = layout.offset;
+    } else {
+	this.start_offset = 0;
+    }
+
     this.itemRects = [];
 
     // Start with showing the entire genome unless otherwise stated
-    this.visStart = 'undefined' !== typeof layout.initStart ? layout.initStart : 0;
-    this.visEnd = 'undefined' !== typeof layout.initEnd ? layout.initEnd : layout.genomesize;
+    this.visStart = 'undefined' !== typeof layout.initStart ? layout.initStart : this.start_offset;
+    this.visEnd = 'undefined' !== typeof layout.initEnd ? layout.initEnd : layout.genomesize + this.start_offset;
 
     this.x = d3.scale.linear()
 //	.domain([0, layout.genomesize])
@@ -1083,8 +1090,8 @@ genomeTrack.prototype.rescale = function() {
     var cfg = this.layout;
 
     var reset_s = 0;
-    if ((this.x1.domain()[1] - this.x1.domain()[0]) >= (this.genomesize - 0)) {
-	this.zoom.x(this.x1.domain([0, this.genomesize]));
+    if ((this.x1.domain()[1] - this.x1.domain()[0]) >= (this.genomesize - this.start_offset)) {
+	this.zoom.x(this.x1.domain([this.start_offset, this.genomesize + this.start_offset]));
 	reset_s = 1;
     }
 
@@ -1093,12 +1100,12 @@ genomeTrack.prototype.rescale = function() {
 	this.zoom.translate([0,0]);
     }
     else {
-	if (this.x1.domain()[0] < 0) {
-	    this.x1.domain([0, this.x1.domain()[1] - this.x1.domain()[0] + 0]);
+	if (this.x1.domain()[0] < this.start_offset) {
+	    this.x1.domain([this.start_offset, this.x1.domain()[1] - this.x1.domain()[0] + this.start_offset]);
 	}
-	if (this.x1.domain()[1] > this.genomesize) {
-	    var xdom0 = this.x1.domain()[0] - this.x1.domain()[1] + this.genomesize;
-	    this.x1.domain([xdom0, this.genomesize]);
+	if (this.x1.domain()[1] > this.genomesize + this.start_offset) {
+	    var xdom0 = this.x1.domain()[0] - this.x1.domain()[1] + this.genomesize + this.start_offset;
+	    this.x1.domain([xdom0, this.genomesize + this.start_offset]);
 	}
     }
 

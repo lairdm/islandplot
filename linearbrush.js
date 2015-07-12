@@ -6,6 +6,12 @@ function linearBrush(layout, callbackObj) {
     this.layout;
     this.callbackObj = callbackObj;
 
+    if('undefined' !== typeof layout.offset) {
+	this.start_offset = layout.offset;
+    } else {
+	this.start_offset = 0;
+    }
+
     this.brushContainer = d3.select(layout.container)
 	.append("svg")
 	.attr("width", contextWidth + contextMargin.left + contextMargin.right)
@@ -14,7 +20,7 @@ function linearBrush(layout, callbackObj) {
 
     this.x1 = d3.scale.linear()
 	.range([0,contextWidth])
-       	.domain([0, layout.genomesize]);
+       	.domain([this.start_offset, layout.genomesize + this.start_offset]);
 
     this.mini = this.brushContainer.append("g")
 	.attr("transform", "translate(" + contextMargin.left + "," + contextMargin.top + ")")
